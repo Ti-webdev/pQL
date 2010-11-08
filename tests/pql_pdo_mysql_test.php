@@ -85,12 +85,17 @@ class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
 		$this->db->exec("CREATE TABLE pql_test(id INT AUTO_INCREMENT PRIMARY KEY, val TEXT)");
 		
 		$object = $this->pql()->test();
+		$this->assertTrue($object instanceof pQL_Object);
+		$this->assertTrue(empty($object->id));
 		$object->val = $val;
 		$object->save();
 
+		$this->assertEquals($val, $this->db->query("SELECT val FROM pql_test WHERE val = '$val'")->fetch(PDO::FETCH_OBJ)->val);
 		$id = $this->db->lastInsertId();
 
 		$this->assertEquals($id, $object->id);
 		$this->assertEquals($val, $this->pql()->test($id)->val);
+		
+		// custom id field
 	}
 }

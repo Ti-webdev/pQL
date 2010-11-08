@@ -42,4 +42,10 @@ abstract class pQL_Driver {
 
 
 	abstract function findByPk($class, $value);
+	abstract function save($class, $properties);
+
+
+	function create($class) {
+		return $this->getTranslator()->getObject($class);
+	}
 }
