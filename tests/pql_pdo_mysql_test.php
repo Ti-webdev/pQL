@@ -5,9 +5,7 @@ class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
 	private $sqlite = 'pql_test.sqlite3';
 	function __construct() {
 		parent::__construct();
-		
 		$this->db = new PDO('mysql:host=localhost;dbname=test', 'test', 'test');
-		
 		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		$this->pql = pQL::PDO($this->db);
 		$this->tearDown();
@@ -41,7 +39,9 @@ class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$id = $this->db->lastInsertId();
 		$this->assertTrue(ctype_digit("$id"));
-		$this->assertEquals($id, $this->pql()->test($id)->id);
+		$object = $this->pql()->test($id);
+		$this->assertEquals($id, $object->id);
+		$this->assertTrue($object instanceof pQL_Object);
 		
 		// несколько записей
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
@@ -76,5 +76,21 @@ class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
 		$id = $this->db->lastInsertId();
 		$this->pql->tablePrefix('pql_');
 		$this->assertEquals($id, $this->pql()->test($id)->id);
+	}
+	
+	
+	function testCreate() {
+		$val = md5(microtime(true));
+		
+		$this->db->exec("CREATE TABLE pql_test(id INT AUTO_INCREMENT PRIMARY KEY, val TEXT)");
+		
+		$object = $this->pql()->test();
+		$object->val = $val;
+		$object->save();
+
+		$id = $this->db->lastInsertId();
+
+		$this->assertEquals($id, $object->id);
+		$this->assertEquals($val, $this->pql()->test($id)->val);
 	}
 }

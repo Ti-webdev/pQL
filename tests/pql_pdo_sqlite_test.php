@@ -38,7 +38,10 @@ class pQL_PDO_SQLite_Test extends PHPUnit_Framework_TestCase {
 		$this->db->exec("CREATE TABLE pql_test(id INTEGER PRIMARY KEY)");
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$id = $this->db->lastInsertId();
-		$this->assertEquals($id, $this->pql()->test($id)->id);
+		$this->assertTrue(ctype_digit("$id"));
+		$object = $this->pql()->test($id);
+		$this->assertEquals($id, $object->id);
+		$this->assertTrue($object instanceof pQL_Object);
 		
 		// несколько записей
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");

@@ -13,14 +13,14 @@ class pQL_Creater {
 	private $pQL;
 
 
-	function __call($table, $arguments) {
+	function __call($class, $arguments) {
 		// find by pk
 		if ($arguments and $arguments[0]) {
-			return $this->pQL->driver()->findByPk($table, $arguments[0]);
+			return $this->pQL->driver()->findByPk($class, $arguments[0]);
 		}
 
 		// new object
-		return $this->pQL->driver()->create($table);
+		return new pQL_Object;
 	}
 	
 	

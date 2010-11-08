@@ -26,7 +26,8 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		$pk = $this->getPrimaryKey($table);
 		$sth = $this->dbh()->prepare("SELECT * FROM $table WHERE $pk = :value");
 		$sth->bindValue(':value', $value);
+		$sth->setFetchMode(PDO::FETCH_CLASS, 'pQL_Object');
 		$sth->execute();
-		return $sth->fetch(PDO::FETCH_OBJ);
+		return $sth->fetch();
 	}
 }
