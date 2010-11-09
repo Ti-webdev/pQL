@@ -2,7 +2,6 @@
 require_once dirname(__FILE__).'/bootstrap.php';
 
 class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
-	private $sqlite = 'pql_test.sqlite3';
 	function __construct() {
 		parent::__construct();
 		$this->db = new PDO('mysql:host=localhost;dbname=test', 'test', 'test');
@@ -10,14 +9,7 @@ class pQL_PDO_MySQL_Test extends PHPUnit_Framework_TestCase {
 		$this->pql = pQL::PDO($this->db);
 		$this->tearDown();
 	}
-	
-	
-	function __destruct() {
-		$this->db = null;
-		$this->pql = null;
-		if (file_exists($this->sqlite)) unlink($this->sqlite);
-	}
-	
+
 	
 	function pql() {
 		return $this->pql->creater();
