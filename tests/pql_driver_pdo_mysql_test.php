@@ -112,4 +112,20 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->setExpectedException('pQL_Exception_PrimaryKeyNotExists');
 		$this->pql()->test()->save();
 	}
+	
+	
+	function testFetchForeignObject() {
+		$this->db->exec("CREATE TABLE pql_test(id INT AUTO_INCREMENT PRIMARY KEY)");
+		$this->db->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->db->exec("CREATE TABLE pql_test_b(id INT AUTO_INCREMENT PRIMARY KEY, test_id INT)");
+		
+		$object = $this->pql()->test()->save();
+		$objectB = $this->pql()->testB();
+		$objectB->test = $object;
+		$objectB->save();
+
+		$this->assertEquals($object->id, $this->pql()->testB($objectB->id)->test->id);
+		
+		$this->db->exec("DROP TABLE pql_test_b");
+	}
 }
