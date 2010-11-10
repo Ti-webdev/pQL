@@ -1,2 +1,6 @@
+- foreign object
+- custom class name for pQL objects
+- namespace objects
+- pQL objects autoloader
+- Опционально: автосоздание и модификация таблиц
 - Drizzle support (prefomance fork of mysql Drizzle http://drizzle.org/)
- 

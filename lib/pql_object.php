@@ -1,6 +1,19 @@
 <?php
 abstract class pQL_Object {
-	abstract protected function getClass();
+	function __construct($properties) {
+		$this->properties = $properties;
+	}
+	
+	
+	protected function getClass() {
+		return get_class($this);
+	}
+	
+	
+	protected function getToStringField() {
+		return $this->getPQL()->driver()->getToStringField($this->getClass());
+	}
+
 
 	function save() {
 		$result = $this->getPQL()->driver()->save($this->getClass(), $this->newProperties, $this->properties);
@@ -23,14 +36,29 @@ abstract class pQL_Object {
 
 	private $properties = array();
 	private $newProperties = array();
-	function __set($key, $value) {
-		$this->newProperties[$key] = $value;
+	function set($property, $value) {
+		$this->newProperties[$property] = $value;
 		return $this;
 	}
 
 
-	function __get($key) {
-		if (array_key_exists($key, $this->newProperties)) return $this->newProperties[$key];
-		return $this->properties[$key];
+	function get($property) {
+		if (array_key_exists($property, $this->newProperties)) return $this->newProperties[$property];
+		return $this->properties[$property];
+	}
+
+
+	final function __get($property) {
+		return $this->get($property);
+	}
+
+
+	final function __set($property, $value) {
+		return $this->set($property, $value);
+	}
+	
+	
+	function __toString() {
+		return (string) $this->get($this->getToStringField());
 	}
 }

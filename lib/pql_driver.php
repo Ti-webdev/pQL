@@ -39,6 +39,9 @@ abstract class pQL_Driver {
 	protected function getTranslator() {
 		return $this->translator;
 	}
+	
+	
+	abstract function getToStringField($class);
 
 
 	abstract function findByPk($class, $value);

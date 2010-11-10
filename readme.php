@@ -4,21 +4,28 @@
 function db() {
 	static $pQL;
 	if (!$pQL) {
+		// при первом вызове
+		// подключаемся к базе
 		$dbh = new PDO('mysql:host=localhost;dbname=test', 'test', '');
+		// инициализируем pQL
 		$pQL = new pQL($dbh);
 	}
 	return $pQL->creater();
 }
 
-// INSERT
+// SQL: INSERT INTO user(login, password, info) VALUES('guest', 'myPassword', 'auto \'quoted\" string!')
 $user = db()->user();
 $user->login = 'guest';
 $user->password = 'myPassword';
+$user->info = 'auto \'quoted" string!';
 $user->save();
 $id = $user->id;
 
 // INSERT inline syntaxis
 $id = db()->user()->set('login', 'guest')->set('password', 'myPassword')->save()->id;
+
+// object to string:
+echo $user; // guest
 
 // add phone number
 $phone = db()->phoneNumber();

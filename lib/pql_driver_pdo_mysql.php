@@ -10,16 +10,32 @@ class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		return parent::setTranslator($translator);
 	}
 	
-	
-	protected function getPrimaryKey($table) {
+
+	function getToStringField($class) {
+		$table = $this->getTranslator()->classToTable($class);
+		$result = null;
+		foreach($this->dbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
+			$isString = preg_match('#^(text|char|varchar)#', $column['Type']);
+			if ($isString or is_nulL($result)) {
+				$result = $column['Field'];
+				if ($isString) break;
+			}
+		}
+		if ($result) return $this->getTranslator()->fieldToProperty($result);
+		return $result;
+	}
+
+
+	protected function getTablePrimaryKey($table) {
 		$result = null;
 		foreach($this->dbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
 			$isPK = 'PRI' == $column['Key'];
-			if ($isPK or is_nulL($result)) {
-				$result = $this->getTranslator()->addDbQuotes($column['Field']);
+			if ($isPK) { //  or is_nulL($result)
+				$result = $column['Field'];
 				if ($isPK) break;
 			}
 		}
+		if ($result) return $this->getTranslator()->addDbQuotes($result);
 		return $result;
 	}
 }
