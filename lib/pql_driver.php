@@ -42,7 +42,7 @@ abstract class pQL_Driver {
 
 
 	abstract function findByPk($class, $value);
-	abstract function save($class, $properties);
+	abstract function save($class, $newProperties, $oldProperties);
 
 
 	function create($class) {

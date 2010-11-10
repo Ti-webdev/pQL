@@ -18,21 +18,36 @@ class pQL_Translator {
 	}
 	
 	
-	function classToTable($className, $quoted = true) {
+	function classToTable($className, $addQuotes = true) {
 		$result = $this->tablePrefix.$className;
-		if ($quoted) $this->tableQuote.$result.$this->tableQuote;
+		if ($addQuotes) $this->addDbQuotes($result);
 		return $result;
 	}
 	
 	
 	function propertyToField($property) {
-		return $this->tableQuote.$property.$this->tableQuote;;
+		return $this->addDbQuotes($property);
+	}
+
+
+	function fieldToProperty($field) {
+		return $this->removeDbQuotes($field);
+	}
+
+
+	function addDbQuotes($field) {
+		return $this->dbQuote.$field.$this->dbQuote;
 	}
 	
 	
-	private $tableQuote = '';
-	function setTableQuote($newQuote)  {
-		$this->tableQuote = $newQuote;
+	private function removeDbQuotes($property) {
+		return '' === $this->dbQuote ? $property : trim($property, $this->dbQuote);
+	}
+
+	
+	private $dbQuote = '';
+	function setDbQuote($newQuote)  {
+		$this->dbQuote = $newQuote;
 	}
 	
 	

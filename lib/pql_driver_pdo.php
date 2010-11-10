@@ -32,34 +32,31 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	function save($class, $properties) {
+	function save($class, $newProperties, $oldProperties) {
 		$tr = $this->getTranslator();
 		$table = $tr->classToTable($class);
 		$pk = $this->getPrimaryKey($table);
+		$pkProperty = $tr->fieldToProperty($pk);
 		$values = $fields = array();
-		$isUpdate = false;
-		foreach($properties as $key=>$value) {
+		$isUpdate = isset($oldProperties[$pkProperty]);
+		foreach($newProperties as $key=>$value) {
 			$field = $tr->propertyToField($key);
-			if ($pk == $field) {
-				$isUpdate = true;
-				$id = $value;
-				continue;
-			}
 			$fields[] = $field;
 			$values[] = $value;
 		}
 		if (!$fields) return;
-		if (in_array($pk, $fields)) {
+		if ($isUpdate) {
 			$sth = $this->dbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");
 			foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
-			$sth->bindValue(':pk', $id);
+			$sth->bindValue(':pk', $oldProperties[$pkProperty]);
 			$sth->execute();
 		}
 		else {
 			$sth = $this->dbh()->prepare("INSERT INTO $table(".implode(',', $fields).") VALUES(?".str_repeat(', ?', count($fields)-1).")");
 			foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
 			$sth->execute();
-			return $this->dbh()->lastInsertId();
+			$newProperties[$pkProperty] = $this->dbh()->lastInsertId();
 		}
+		return $newProperties;
 	}
 }
