@@ -5,7 +5,7 @@ abstract class pQL_Object {
 	}
 	
 	
-	protected function getClass() {
+	function getClass() {
 		return get_class($this);
 	}
 	

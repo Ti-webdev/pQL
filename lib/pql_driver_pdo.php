@@ -33,6 +33,19 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		foreach($sth->fetch() as $field=>$value) $properties[$tr->fieldToProperty($field)] = $value;
 		return $this->getTranslator()->getObject($class, $properties);
 	}
+	
+	
+	private function isPqlObject($value) {
+		return is_object($value) and $value instanceof pQL_Object;
+	}
+	
+	
+	function getPqlId(pQL_Object $object) {
+		$tr = $this->getTranslator();
+		$foreignTable = $tr->classToTable($object->getClass());
+		$foreignKey = $this->getTablePrimaryKey($foreignTable);
+		return $object->get($tr->fieldToProperty($foreignKey));
+	}
 
 
 	function save($class, $newProperties, $oldProperties) {
@@ -44,6 +57,10 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		$isUpdate = isset($oldProperties[$pkProperty]);
 		foreach($newProperties as $key=>$value) {
 			$field = $tr->propertyToField($key);
+			// foreignTalbe
+			if ($this->isPqlObject($value)) {
+				$value = $this->getPqlId($value);
+			}
 			$fields[] = $field;
 			$values[] = $value;
 		}
