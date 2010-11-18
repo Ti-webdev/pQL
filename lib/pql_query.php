@@ -20,6 +20,30 @@ final class pQL_Query implements IteratorAggregate {
 		$this->stack->push(new pQL_Query_Predicate($type, $key));
 		return $this;
 	}
+	
+	
+	function key() {
+		$this->assertPropertyDefined();
+		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_KEY));
+		return $this;
+	}
+
+
+	private function assertClassDefined() {
+		foreach($this->stack as $predicate) {
+			if (pQL_Query_Predicate::TYPE_CLASS === $predicate->getType()) return;
+		}
+		throw new pQL_Exception('Select class first!');
+	}
+
+
+	private function assertPropertyDefined() {
+		$this->assertClassDefined();
+		foreach($this->stack as $predicate) {
+			if (pQL_Query_Predicate::TYPE_PROPERTY === $predicate->getType()) return;
+		}
+		throw new pQL_Exception('Select property first!');
+	}
 
 
 	/**
@@ -28,73 +52,5 @@ final class pQL_Query implements IteratorAggregate {
 	function getIterator() {
 		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
 		return $this->pQL->driver()->getIterator($this->stack);
-	}
-}
-
-
-
-# PROTOTYPE
-
-
-class PROTOTYPE_pQL_Query implements IteratorAggregate,Countable {
-	private $table;
-	/**
-	 * @see IteratorAggregate::getIterator()
-	 */
-	function getIterator() {
-		return $this->pQL->driver()->getIterator($this);
-	}
-
-
-	/**
-	 * @see Countable::count()
-	 */
-	public function count() {
-	}
-	
-	
-	function __toString() {
-		return $this->pQL->driver()->sql($this->query);
-	}
-
-
-	function update() {
-		
-	}
-
-
-	function delete() {
-		
-	}
-
-
-	function sql($sql) {
-		$this->queryAdd(self::Q_SQL, $sql);
-		return $this;
-	}
-
-
-	const Q_TABLE = 1;
-	const Q_FIELD = 2;
-	private $query = array();
-	private function queryAdd($type, $arguments) {
-		$this->query[] = array($type, $arguments);
-		return $this;
-	}
-
-
-	/**
-	 * Получение таблицы или поля таблицы
-	 */
-	function __get($name) {
-		if ($this->table) {
-			$this->field = $name;
-			$this->qb()->add(self::Q_FIELD, $name);
-		}
-		else {
-			$this->table = $name;
-			$this->qb()->add(self::Q_TABLE, $name);
-		}
-		return $this;
 	}
 }

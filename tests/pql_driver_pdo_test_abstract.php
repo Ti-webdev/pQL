@@ -84,4 +84,26 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 		 * @todo fetch foreign object row
 		 */
 	}
+	
+	
+	function testKeyIterator() {
+		$this->db->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
+	
+		$expected = array();
+		for($i = 0; $i<10; $i++) {
+			$object = $this->pql()->test();
+			$expected['first'][] = $object->first = rand(0, PHP_INT_SIZE);
+			$expected['number'][] = $object->number = md5(microtime(true));
+			$expected['last'][] = $object->last = - rand(0, PHP_INT_SIZE);
+			$object->save();
+		}
+	
+		$i = 0;
+		foreach($this->pql()->test->last->key()->number as $last=>$number) {
+			$this->assertEquals($expected['last'][$i], $last);
+			$this->assertEquals($expected['number'][$i], $number);
+			$i++;
+		}
+		$this->assertEquals(count($expected['first']), $i);
+	}
 }

@@ -36,8 +36,6 @@ $phone->save();
 // find by id
 $user = db()->user($id);
 
-// done
-
 // field iterator
 foreach(db()->phoneNumber->user->is($user)->number as $number) {
 	echo "$number<br />";
@@ -47,6 +45,8 @@ foreach(db()->phoneNumber->user->is($user)->number as $number) {
 foreach(db()->user->id->key()->name as $id=>$name) {
 	echo "$id: $name\n";
 }
+
+// done
 
 // custom select query
 $list =   db()->user->login->in('guset', 'anonimous')

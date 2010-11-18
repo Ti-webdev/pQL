@@ -91,23 +91,36 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	final function getIterator(pQL_Query_Predicate_List $list) {
 		$tr = $this->getTranslator();
 		$field = null;
+		$fields = array();
 		$tables = array();
+		$iterator = new pQL_Query_Iterator;
 		foreach($list as $predicate) {
 			switch ($predicate->getType()) {
 				case pQL_Query_Predicate::TYPE_CLASS:
-					$tables[] = $tr->classToTable($predicate->getSubject());
+					$tables[] = $tr->classToTable($predicate->getSubject()).' AS t'.count($tables);
 					break;
 				case pQL_Query_Predicate::TYPE_PROPERTY:
 					$field = $tr->propertyToField($predicate->getSubject());
+					$fields[] = 't'.(count($tables)-1).'.'.$field.' AS f'.count($fields);
 					break;
+				case pQL_Query_Predicate::TYPE_KEY:
+					$iterator->setKeyIndex(count($field)-1);
+					break;
+				default:
+					throw new pQL_Exception('Invalid predicate type!');
 			}
 		}
-		if (pQL_Query_Predicate::TYPE_PROPERTY == $predicate->getType()) {
-			$sth = $this->getDbh()->prepare("SELECT $field FROM ".implode(',', $tables));
-			$sth->setFetchMode(PDO::FETCH_COLUMN, 0);
-			$sth->execute();
-			return $sth;
-		}
-		throw new LogicException('Not implemented!');
+		
+		if (pQL_Query_Predicate::TYPE_PROPERTY != $predicate->getType()) throw new LogicException('Not implemented!');
+		
+		$iterator->setValueIndex(count($fields)-1);
+
+		$sql = "SELECT ".implode(',', $fields)." FROM ".implode(',', $tables);
+		$sth = $this->getDbh()->prepare($sql);
+		$sth->setFetchMode(PDO::FETCH_NUM);
+		$sth->execute();
+
+		$iterator->setIterator(new IteratorIterator($sth));
+		return $iterator;
 	}
 }
