@@ -13,7 +13,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	/**
 	 * return PDO
 	 */
-	protected function dbh() {
+	protected function getDbh() {
 		return $this->dbh;
 	}
 
@@ -25,7 +25,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		$tr = $this->getTranslator();
 		$table = $tr->classToTable($class);
 		$pk = $this->getTablePrimaryKey($table);
-		$sth = $this->dbh()->prepare("SELECT * FROM $table WHERE $pk = :value");
+		$sth = $this->getDbh()->prepare("SELECT * FROM $table WHERE $pk = :value");
 		$sth->bindValue(':value', $value);
 		$sth->setFetchMode(PDO::FETCH_ASSOC);
 		$sth->execute();
@@ -67,23 +67,47 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		if ($isUpdate) {
 			if (!$fields) return $newProperties;
 			if (!$pk) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined");
-			$sth = $this->dbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");
+			$sth = $this->getDbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");
 			foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
 			$sth->bindValue(':pk', $oldProperties[$pkProperty]);
 			$sth->execute();
 		}
 		else {
 			if ($fields) {
-				$sth = $this->dbh()->prepare("INSERT INTO $table(".implode(',', $fields).") VALUES(?".str_repeat(', ?', count($fields)-1).")");
+				$sth = $this->getDbh()->prepare("INSERT INTO $table(".implode(',', $fields).") VALUES(?".str_repeat(', ?', count($fields)-1).")");
 				foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
 				$sth->execute();
 			}
 			else {
 				if (!$pk) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined");
-				$this->dbh()->exec("INSERT INTO $table($pk) VALUES(NULL)");
+				$this->getDbh()->exec("INSERT INTO $table($pk) VALUES(NULL)");
 			}
-			if ($pk) $newProperties[$pkProperty] = $this->dbh()->lastInsertId();
+			if ($pk) $newProperties[$pkProperty] = $this->getDbh()->lastInsertId();
 		}
 		return $newProperties;
+	}
+	
+
+	final function getIterator(pQL_Query_Predicate_List $list) {
+		$tr = $this->getTranslator();
+		$field = null;
+		$tables = array();
+		foreach($list as $predicate) {
+			switch ($predicate->getType()) {
+				case pQL_Query_Predicate::TYPE_CLASS:
+					$tables[] = $tr->classToTable($predicate->getSubject());
+					break;
+				case pQL_Query_Predicate::TYPE_PROPERTY:
+					$field = $tr->propertyToField($predicate->getSubject());
+					break;
+			}
+		}
+		if (pQL_Query_Predicate::TYPE_PROPERTY == $predicate->getType()) {
+			$sth = $this->getDbh()->prepare("SELECT $field FROM ".implode(',', $tables));
+			$sth->setFetchMode(PDO::FETCH_COLUMN, 0);
+			$sth->execute();
+			return $sth;
+		}
+		throw new LogicException('Not implemented!');
 	}
 }

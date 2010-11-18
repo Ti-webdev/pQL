@@ -124,7 +124,7 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$objectB = $this->pql()->testB();
 		$objectB->test = $object;
 		$objectB->save();
-		
+
 		$this->assertEquals($object->id, $this->db->query("SELECT test FROM pql_test_b")->fetch(PDO::FETCH_OBJ)->test);
 
 		$this->db->exec("DROP TABLE pql_test_b");

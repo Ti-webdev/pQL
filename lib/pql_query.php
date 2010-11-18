@@ -3,20 +3,34 @@ final class pQL_Query implements IteratorAggregate {
 	private $pQL;
 	function __construct(pQL $pQL) {
 		$this->pQL = $pQL;
+		$this->stack = new pQL_Query_Predicate_List;
 	}
 	
-	const PROPERTY = 1;
+	
 	private $query = array();
-	function __get($property) {
-		$this->query[] = array(self::PROPERTY, $property);
+	function __get($key) {
+		$type = pQL_Query_Predicate::TYPE_CLASS;
+		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_LIFO);
+		foreach($this->stack as $predicate) {
+			if (pQL_Query_Predicate::TYPE_CLASS === $predicate->getType()) {
+				$type = pQL_Query_Predicate::TYPE_PROPERTY;
+				break;
+			}
+		}
+		$this->stack->push(new pQL_Query_Predicate($type, $key));
 		return $this;
 	}
 
 
+	/**
+	 * @see IteratorAggregate::getIterator()
+	 */
 	function getIterator() {
-		return $this->pQL->driver()->getIterator();
-	} 
+		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
+		return $this->pQL->driver()->getIterator($this->stack);
+	}
 }
+
 
 
 # PROTOTYPE
@@ -25,7 +39,6 @@ final class pQL_Query implements IteratorAggregate {
 class PROTOTYPE_pQL_Query implements IteratorAggregate,Countable {
 	private $table;
 	/**
-	 * (non-PHPdoc)
 	 * @see IteratorAggregate::getIterator()
 	 */
 	function getIterator() {

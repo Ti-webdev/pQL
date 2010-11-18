@@ -47,6 +47,7 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function testFieldIterator() {
 		$this->db->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
 
+
 		$expected = array();
 		for($i = 0; $i<10; $i++) {
 			$object = $this->pql()->test();
@@ -56,11 +57,13 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 			$object->save();
 		}
 
+
 		$cnt = 0;
 		foreach($this->pql()->test->number as $i=>$number) {
 			$this->assertEquals($expected['number'][$i], $number);
 			$cnt++;
 		}
+
 
 		foreach($this->pql()->test->first as $i=>$first) {
 			$this->assertEquals($expected['first'][$i], $first);
@@ -73,6 +76,12 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 			$cnt++;
 		}
 
+
 		$this->assertEquals(30, $cnt);
+
+
+		/**
+		 * @todo fetch foreign object row
+		 */
 	}
 }

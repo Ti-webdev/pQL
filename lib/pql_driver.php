@@ -53,7 +53,5 @@ abstract class pQL_Driver {
 	}
 	
 	
-	final function getIterator() {
-		return new ArrayIterator;
-	}
+	abstract function getIterator(pQL_Query_Predicate_List $list);
 }
