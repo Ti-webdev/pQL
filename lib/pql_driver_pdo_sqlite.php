@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
+final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	function getToStringField($class) {
 		$table = $this->getTranslator()->classToTable($class);
 		$result = null;

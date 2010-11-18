@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
+final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	function setTranslator(pQL_Translator $translator) {
 		$translator->setDbQuote('`');
 		return parent::setTranslator($translator);

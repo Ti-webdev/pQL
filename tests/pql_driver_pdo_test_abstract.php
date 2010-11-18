@@ -42,4 +42,37 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$obj = $this->pql()->test()->set('val', $val)->save();
 		$this->assertEquals($val, "$obj");
 	}
+	
+	
+	function testFieldIterator() {
+		$this->db->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
+
+		$expected = array();
+		for($i = 0; $i<10; $i++) {
+			$object = $this->pql()->test();
+			$expected['first'][] = $object->first = rand(0, PHP_INT_SIZE);
+			$expected['number'][] = $object->number = md5(microtime(true));
+			$expected['last'][] = $object->last = - rand(0, PHP_INT_SIZE);
+			$object->save();
+		}
+
+		$cnt = 0;
+		foreach($this->pql()->test->number as $i=>$number) {
+			$this->assertEquals($expected['number'][$i], $number);
+			$cnt++;
+		}
+
+		foreach($this->pql()->test->first as $i=>$first) {
+			$this->assertEquals($expected['first'][$i], $first);
+			$cnt++;
+		}
+
+		
+		foreach($this->pql()->test->last as $i=>$last) {
+			$this->assertEquals($expected['last'][$i], $last);
+			$cnt++;
+		}
+
+		$this->assertEquals(30, $cnt);
+	}
 }

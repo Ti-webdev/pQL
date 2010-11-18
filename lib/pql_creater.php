@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Creater {
+final class pQL_Creater {
 	function __construct(pQL $pql) {
 		$this->pQL = $pql;
 	}
@@ -24,10 +24,10 @@ class pQL_Creater {
 		$object->setPQL($this->pQL);
 		return $object;
 	}
-	
-	
+
+
 	function __get($key) {
-		$q = new pQL_Query;
+		$q = new pQL_Query($this->pQL);
 		return $q->$key;
 	}
 }

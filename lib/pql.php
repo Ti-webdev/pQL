@@ -11,7 +11,7 @@
  * @version 0.1 alpha
  * @package pQL
  */
-class pQL {
+final class pQL {
 	static function PDO(PDO $dbh) {
 		return new self(pQL_Driver::Factory('PDO', $dbh));
 	}

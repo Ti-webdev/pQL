@@ -1,6 +1,21 @@
 <?php
-class pQL_Query {
+final class pQL_Query implements IteratorAggregate {
+	private $pQL;
+	function __construct(pQL $pQL) {
+		$this->pQL = $pQL;
+	}
 	
+	const PROPERTY = 1;
+	private $query = array();
+	function __get($property) {
+		$this->query[] = array(self::PROPERTY, $property);
+		return $this;
+	}
+
+
+	function getIterator() {
+		return $this->pQL->driver()->getIterator();
+	} 
 }
 
 

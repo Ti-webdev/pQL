@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Translator {
+final class pQL_Translator {
 	private $tablePrefix = '';
 	
 	

@@ -36,7 +36,7 @@ abstract class pQL_Driver {
 	/**
 	 * @return pQL_Translator
 	 */
-	protected function getTranslator() {
+	final protected function getTranslator() {
 		return $this->translator;
 	}
 	
@@ -48,7 +48,12 @@ abstract class pQL_Driver {
 	abstract function save($class, $newProperties, $oldProperties);
 
 
-	function create($class) {
+	final function create($class) {
 		return $this->getTranslator()->getObject($class);
+	}
+	
+	
+	final function getIterator() {
+		return new ArrayIterator;
 	}
 }
