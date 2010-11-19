@@ -25,7 +25,7 @@ $id = $user->id;
 $id = db()->user()->set('login', 'guest')->set('password', 'myPassword')->save()->id;
 
 // object to string:
-echo $user; // guest
+echo $user; // 'guest'
 
 // add phone number
 $phone = db()->phoneNumber();

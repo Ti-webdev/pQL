@@ -55,6 +55,7 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 	
 	
 	function testTableNameTranslate() {
+		$this->pql->coding(new pQL_Coding_Typical);
 		$this->db->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->db->exec("CREATE TABLE pql_test_b(id INT AUTO_INCREMENT PRIMARY KEY)");
 		$id = $this->pql()->testB()->save()->id;

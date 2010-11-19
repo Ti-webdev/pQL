@@ -1,7 +1,13 @@
 <?php
 final class pQL_Query_Iterator implements Iterator {
+	private $driver;
+	function __construct(pQL_Driver $driver) {
+		$this->driver = $driver;
+	}
+	
+	
 	private $iterator;
-	function setIterator(Iterator $iterator) {
+	function setSelectIterator(Iterator $iterator) {
 		$this->iterator = $iterator;
 	}
 	
@@ -16,11 +22,26 @@ final class pQL_Query_Iterator implements Iterator {
 	function setValueIndex($index) {
 		$this->valueIndex = $index;
 	}
+	
+	
+	private $valueClass;
+	private $valueClassIndexes;
+	function setValueClass($className, $keys) {
+		$this->valueClass = $className;
+		$this->valueClassIndexes = $keys;
+	}
 
 
 	function current() {
 		$current = $this->iterator->current();
-		return $current[$this->valueIndex];
+		if (is_null($this->valueIndex)) {
+			$properties = array();
+			foreach($this->valueClassIndexes as $i=>$name) $properties[$name] = $current[$i];
+			return $this->driver->getObject($this->valueClass, $properties);
+		}
+		else {
+			return $current[$this->valueIndex];
+		}
 	}
 
 

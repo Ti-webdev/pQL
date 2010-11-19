@@ -31,4 +31,11 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 		}
 		return $result;
 	}
+
+
+	protected function getTableFields($table) {
+		$q = $this->getDbh()->query("PRAGMA table_info($table)");
+		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
+		return $q;
+	}
 }

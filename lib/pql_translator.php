@@ -41,10 +41,14 @@ final class pQL_Translator {
 		$this->tablePrefix = $newPrefix;
 	}
 	
+	
+	function tableToClass($table) {
+		return $this->removeDbQuotes($this->getTableCoding()->fromDb($table));
+	}
+	 
 
 	function classToTable($className, $addQuotes = true) {
 		$result = $this->getTableCoding()->toDb($className);
-		$result = preg_replace('#(.)([A-Z])#ue', '"$1"."_".strtolower("$2")', $className);
 		$result = $this->tablePrefix.$result;
 		if ($addQuotes) $this->addDbQuotes($result);
 		return $result;
@@ -78,10 +82,5 @@ final class pQL_Translator {
 	private $dbQuote = '';
 	function setDbQuote($newQuote)  {
 		$this->dbQuote = $newQuote;
-	}
-	
-	
-	function getObject($class, $properties = array()) {
-		return new pQL_Object_Simple($properties, $class);
 	}
 }

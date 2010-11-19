@@ -31,8 +31,8 @@ abstract class pQL_Driver {
 	function setTranslator(pQL_Translator $translator) {
 		$this->translator = $translator;
 	}
-	
-	
+
+
 	/**
 	 * @return pQL_Translator
 	 */
@@ -48,10 +48,55 @@ abstract class pQL_Driver {
 	abstract function save($class, $newProperties, $oldProperties);
 
 
-	final function create($class) {
-		return $this->getTranslator()->getObject($class);
+	final function getObject($class, $properties = array()) {
+		return new pQL_Object_Simple($properties, $class);
 	}
 	
+
+	final function getIterator(pQL_Query_Predicate_List $list) {
+		$tr = $this->getTranslator();
+		$select = new pQL_Select_Builder;
+		$iterator = new pQL_Query_Iterator($this);
+		foreach($list as $predicate) {
+			switch ($predicate->getType()) {
+				case pQL_Query_Predicate::TYPE_CLASS:
+					$table = $select->registerTable($tr->classToTable($predicate->getSubject()));
+					break;
+
+				case pQL_Query_Predicate::TYPE_PROPERTY:
+					$filed = $select->registerField($table, $tr->propertyToField($predicate->getSubject()));
+					break;
+
+				case pQL_Query_Predicate::TYPE_KEY:
+					$iterator->setKeyIndex($select->getFieldNum($filed));
+					break;
+
+				default:
+					throw new pQL_Exception('Invalid predicate type!');
+			}
+		}
+
+		if (pQL_Query_Predicate::TYPE_PROPERTY === $predicate->getType()) {
+			// в значениях поле
+			$iterator->setValueIndex($select->getFieldNum($filed));
+		}
+		else {
+			// в значениях - объект
+			$fields = array();
+			foreach($this->getTableFields($table->getName()) as $fieldName) {
+				$key = $select->getFieldNum($select->registerField($table, $fieldName));
+				$fields[$key] = $tr->fieldToProperty($fieldName);
+			}
+
+			// класс выборки
+			$iterator->setValueClass($tr->tableToClass($table->getName()), $fields);
+		}
+
+		$iterator->setSelectIterator($this->getSelectIterator($select));
+		return $iterator;
+	}
+
+
 	
-	abstract function getIterator(pQL_Query_Predicate_List $list);
+	abstract protected function getSelectIterator(pQL_Select_Builder $select);
 }

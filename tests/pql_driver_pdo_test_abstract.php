@@ -106,4 +106,20 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 		$this->assertEquals(count($expected['first']), $i);
 	}
+	
+	
+	function testFetchObject() {
+		$this->db->exec("CREATE TABLE pql_test(val VARCHAR(32))");
+
+		$object = $this->pql()->test();
+		$object->val = md5(microtime(true));
+		$object->save();
+
+		foreach($this->pql()->test as $test) {
+			$this->assertEquals($object->val, $test->val);
+			return;
+		}
+		
+		$this->fail('object not found');
+	}
 }

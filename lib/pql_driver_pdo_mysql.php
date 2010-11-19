@@ -9,7 +9,7 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		$translator->setDbQuote('`');
 		return parent::setTranslator($translator);
 	}
-	
+
 
 	function getToStringField($class) {
 		$table = $this->getTranslator()->classToTable($class);
@@ -37,5 +37,12 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		}
 		if ($result) return $this->getTranslator()->addDbQuotes($result);
 		return $result;
+	}
+
+
+	protected function getTableFields($table) {
+		$q = $this->getDbh()->query("SHOW COLUMNS FROM $table");
+		$q->setFetchMode(PDO::FETCH_COLUMN, 0);
+		return $q;
 	}
 }
