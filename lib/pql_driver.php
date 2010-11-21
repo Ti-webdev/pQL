@@ -94,7 +94,7 @@ abstract class pQL_Driver {
 			$iterator->setValueClass($tr->tableToClass($table->getName()), $fields);
 		}
 
-		$queryResults = $this->getSelectQuery($select->getSQL());
+		$queryResults = $this->getSelectQuery($select);
 		$iterator->setSelectIterator($this->getSelectIterator($queryResults));
 		
 		$this->queryList[$queryId] = array($queryResults, $iterator);
@@ -133,10 +133,10 @@ abstract class pQL_Driver {
 
 	/**
 	 * возращает запрос (в формате конкретного драйвера)
-	 * @param  $sql
+	 * @param pQL_Select_Builder $builder
 	 * @return mixed
 	 */
-	abstract protected function getSelectQuery($sql);
+	abstract protected function getSelectQuery(pQL_Select_Builder $builder);
 	
 	
 	/**

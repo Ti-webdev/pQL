@@ -38,4 +38,21 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
 		return $q;
 	}
+
+
+	protected function getSelectQuery(pQL_Select_Builder $builder) {
+		return array($this->getDbh()->query($builder->getSQL()), $builder);
+	}
+
+
+	protected function getSelectIterator($query) {
+		$query[0]->setFetchMode(PDO::FETCH_NUM);
+		return new IteratorIterator($query[0]);
+	}
+
+
+	protected function getCountResults($query) {
+		$sql = 'SELECT COUNT(*) '.$query[1]->getSQLSuffix();
+		return $this->getDbh()->query($sql)->fetchColumn(0);
+	}
 }

@@ -104,8 +104,16 @@ final class pQL_Select_Builder {
 	}
 
 
+	/**
+	 * Возращает часть запроса, начиная с FROM
+	 */
+	function getSQLSuffix() {
+		return 'FROM '.$this->getSQLFrom();
+	}
+
+
 	function getSQL() {
-		$sql = 'SELECT '.$this->getSQLFields().' FROM '.$this->getSQLFrom();
+		$sql = 'SELECT '.$this->getSQLFields().' '.$this->getSQLSuffix();
 		return $sql;
 	}
 }

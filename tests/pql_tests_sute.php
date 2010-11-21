@@ -13,7 +13,8 @@ class pQL_Tests_Sute extends PHPUnit_Framework_TestSuite {
 	public function __construct() {
 		$this->setName ('pQL_Tests_Sute');
 		$this->addTestSuite('pQL_Driver_PDO_MySQL_Test');
-		#$this->addTestSuite('pQL_Driver_PDO_SQLite_Test');
+		$this->addTestSuite('pQL_Driver_PDO_SQLite_Test');
+		#$this->addTestSuite('pQL_Driver_MySQL_Test');
 	}
 
 

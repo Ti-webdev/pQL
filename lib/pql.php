@@ -17,6 +17,12 @@ final class pQL {
 	}
 
 
+	static function MySQL($handle) {
+		if (!is_resource($handle)) throw new InvalidArgumentException('Invalid mysql resource');
+		return new self(pQL_Driver::Factory('MySQL', $handle));
+	}
+
+
 	private $driver;
 	private $translator;
 	function __construct(pQL_Driver $driver) {
