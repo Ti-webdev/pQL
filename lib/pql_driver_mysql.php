@@ -20,7 +20,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	
 	private function query($query) {
 		$result = mysql_query($query, $this->db);
-		if (!$result) throw new pQL_Driver_MySQL_Exception(mysql_error(), mysql_errno());
+		if (!$result) throw new pQL_Driver_MySQL_Exception(mysql_error(), mysql_errno(), $query);
 		return $result;
 	}
 

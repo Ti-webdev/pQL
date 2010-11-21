@@ -1,22 +1,14 @@
 <?php
 final class pQL_Query implements IteratorAggregate, Countable {
 	static private $instance = 0;
-	private $queryId;
 	private $pQL;
+	private $queryMediator;
 	function __construct(pQL $pQL) {
 		$this->pQL = $pQL;
 		$this->stack = new pQL_Query_Predicate_List;
-		$this->queryId = self::$instance++;
+		
 	}
 
-
-	function __destruct() {
-		if (!$this->pQL) return;
-		$driver = $this->pQL->driver();
-		if ($driver) $driver->clearQuery($this->queryId);
-		$this->pQL = null;
-	}
-	
 	
 	private $query = array();
 	function __get($key) {
@@ -29,7 +21,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 			}
 		}
 		$this->stack->push(new pQL_Query_Predicate($type, $key));
-		$this->pQL->driver()->clearQuery($this->queryId);
+		$this->queryMediator = null;
 		return $this;
 	}
 	
@@ -37,7 +29,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function key() {
 		$this->assertPropertyDefined();
 		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_KEY));
-		$this->pQL->driver()->clearQuery($this->queryId);
+		$this->queryMediator = null;
 		return $this;
 	}
 
@@ -57,6 +49,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		}
 		throw new pQL_Exception('Select property first!');
 	}
+	
+	
+	private function getQueryMediator() {
+		if (!$this->queryMediator) $this->queryMediator = new pQL_Query_Mediator;
+		return $this->queryMediator;
+	}
 
 
 	/**
@@ -64,12 +62,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 */
 	function getIterator() {
 		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
-		return $this->pQL->driver()->getIterator($this->queryId, $this->stack);
+		return $this->pQL->driver()->getIterator($this->getQueryMediator(), $this->stack);
 	}
 
 
 	function count() {
 		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
-		return $this->pQL->driver()->getCount($this->queryId, $this->stack);
+		return $this->pQL->driver()->getCount($this->getQueryMediator(), $this->stack);
 	}
 }

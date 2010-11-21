@@ -97,11 +97,10 @@ abstract class pQL_Driver {
 	final function getObject($class, $properties = array()) {
 		return new pQL_Object_Simple($properties, $class);
 	}
-	
 
-	final function getIterator($queryId, pQL_Query_Predicate_List $list) {
-		if ($this->queryExists($queryId)) return $this->queryList[$queryId][1];
-	
+
+
+	final private function buildSelectQuery(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
 		$tr = $this->getTranslator();
 		$select = new pQL_Select_Builder;
 		$iterator = new pQL_Query_Iterator($this);
@@ -141,31 +140,27 @@ abstract class pQL_Driver {
 		}
 
 		$queryResults = $this->getSelectQuery($select);
-		$iterator->setSelectIterator($this->getSelectIterator($queryResults));
 		
-		$this->queryList[$queryId] = array($queryResults, $iterator);
+		$queryMediator->setQueryHanlde($queryResults);
+		$queryMediator->setQueryIterator($iterator);
+		$queryMediator->setSelectBuilder($select);
+	}
+	
 
+	final function getIterator(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
+		if ($queryMediator->isEmptyQueryHandle()) $this->buildSelectQuery($queryMediator, $list);
+
+		$iterator = $queryMediator->getQueryIterator();
+		$iterator->setSelectIterator($this->getSelectIterator($queryMediator->getQueryHandle()));
+		
 		return $iterator;
 	}
 
 
-	private $queryList = array();
-
-
-	private function queryExists($queryId) {
-		return isset($this->queryList[$queryId]);
-	}
 	
-	
-	final function clearQuery($queryId) {
-		if ($this->queryExists($queryId)) unset($this->queryList[$queryId]);
-		return $this;
-	}
-	
-	
-	final function getCount($queryId, pQL_Query_Predicate_List $stack) {
-		$this->getIterator($queryId, $stack);
-		return $this->getCountResults($this->queryList[$queryId][0]);
+	final function getCount(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
+		if ($queryMediator->isEmptyQueryHandle()) $this->buildSelectQuery($queryMediator, $list);
+		return $this->getCountResults($queryMediator->getQueryHandle());
 	}
 
 

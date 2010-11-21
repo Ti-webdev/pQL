@@ -146,24 +146,52 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
-	function _testIn() {
-		$this->exec("CREATE TABLE pql_test(first INT, val VARCHAR(255), last INT)");
-		
-		$objects = array();
+	function testQueryTwice() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		$vals = array();
 		for($i = 0; $i<10; $i++) {
+			$val = md5(microtime(true));
+			$this->exec("INSERT INTO pql_test VALUES('".$val."')");
+			$vals[] = $val;
+		}
+		
+		$q = $this->pql()->test;
+		
+		$this->assertEquals(count($vals), count($q));
+		
+		$valsCopy = $vals;
+		foreach($q as $v) {
+			$i = array_search($v->val, $valsCopy);
+			unset($valsCopy[$i]);
+		}
+		if ($valsCopy) $this->fail('valsCopy assert empty!');
+		
+		$this->assertEquals(count($vals), count($q));
+		
+
+		// again foreach!
+		$valsCopy = $vals;
+		foreach($q as $v) {
+			$i = array_search($v->val, $valsCopy);
+			unset($valsCopy[$i]);
+		}
+		if ($valsCopy) $this->fail('valsCopy assert empty!');
+	}
+
+
+	function _testIn() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255)");
+		
+		foreach(array('one', 'two', 'three') as $val) { 
 			$object = $this->pql()->test();
-			$object->first = rand(0, PHP_INT_SIZE);
-			$object->val = md5(microtime(true));
-			$object->last = - rand(0, PHP_INT_SIZE);
+			$object->val = $val;
 			$object->save();
-			if (rand(0, 1)) $objects[] = $object;
 		}
 
-		$q = $this->pql()->test->val;
-		foreach($objects as $object) $q->is($object->val);
-		foreach($q as $actualObject) {
-			$this->assertEquals($object->val, $actualObject->val);
-			return;
+		$q = $this->pql()->test->val->in('two');
+		$this->assertEquals(1, count($q));
+		foreach($q as $object) {
+			
 		}
 
 		$this->fail('object not found');
