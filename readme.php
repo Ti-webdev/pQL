@@ -2,15 +2,16 @@
 
 // configure
 function db() {
-	static $pQL;
-	if (!$pQL) {
+	static $creater;
+	if (!$creater) {
 		// при первом вызове
 		// подключаемся к базе
 		$dbh = new PDO('mysql:host=localhost;dbname=test', 'test', '');
 		// инициализируем pQL
 		$pQL = new pQL($dbh);
+		$creater = $pQL->creater();
 	}
-	return $pQL->creater();
+	return $creater;
 }
 
 // SQL: INSERT INTO user(login, password, info) VALUES('guest', 'myPassword', 'auto \'quoted\" string!')

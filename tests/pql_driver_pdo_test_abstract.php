@@ -19,7 +19,7 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 	
 	
 	protected function pql() {
-		return $this->pql->creater();
+		return $this->creater;
 	}
 	
 	
@@ -27,6 +27,7 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function setUp() {
 		$this->pql = pQL::PDO($this->db);
 		$this->pql->tablePrefix('pql_');
+		$this->creater = $this->pql->creater();
 	}
 	
 	
@@ -106,20 +107,74 @@ class pQL_Driver_PDO_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 		$this->assertEquals(count($expected['first']), $i);
 	}
-	
-	
+
+
 	function testFetchObject() {
 		$this->db->exec("CREATE TABLE pql_test(val VARCHAR(32))");
+		$val = md5(microtime(true));
 
 		$object = $this->pql()->test();
-		$object->val = md5(microtime(true));
+		$object->val = $val;
 		$object->save();
 
 		foreach($this->pql()->test as $test) {
-			$this->assertEquals($object->val, $test->val);
+			$this->assertEquals($val, $test->val);
 			return;
 		}
+
+		$this->fail('object not found');
+	}
+	
+	
+	function testCountable() {
+		$this->db->exec("CREATE TABLE pql_test(val VARCHAR(32))");
+		$this->assertEquals(0, count($this->pql()->test));
 		
+		$this->db->exec("INSERT INTO pql_test VALUES('".md5(microtime(true))."')");
+		$this->assertEquals(1, count($this->pql()->test));
+		
+		for($i = 0; $i<10; $i++) {
+			$this->db->exec("INSERT INTO pql_test VALUES('".md5(microtime(true))."')");
+		}
+		$this->assertEquals(11, count($this->pql()->test->val));
+
+		$count = 0;
+		foreach($this->pql()->test->val as $val) $count++;
+		$this->assertEquals(11, $count);
+		
+		$i = null;
+		foreach($this->pql()->test->val as $i=>$val) ;
+		$this->assertEquals(10, $i);
+		
+		$count = 0;
+		foreach($this->pql()->test as $i=>$val) $count++;
+		$this->assertEquals(11, $count);
+
+		$this->db->exec("DELETE FROM pql_test");
+		$this->assertEquals(0, count($this->pql()->test));
+	}
+	
+	
+	function _testIn() {
+		$this->db->exec("CREATE TABLE pql_test(first INT, val VARCHAR(255), last INT)");
+		
+		$objects = array();
+		for($i = 0; $i<10; $i++) {
+			$object = $this->pql()->test();
+			$object->first = rand(0, PHP_INT_SIZE);
+			$object->val = md5(microtime(true));
+			$object->last = - rand(0, PHP_INT_SIZE);
+			$object->save();
+			if (rand(0, 1)) $objects[] = $object;
+		}
+
+		$q = $this->pql()->test->val;
+		foreach($objects as $object) $q->is($object->val);
+		foreach($q as $actualObject) {
+			$this->assertEquals($object->val, $actualObject->val);
+			return;
+		}
+
 		$this->fail('object not found');
 	}
 }

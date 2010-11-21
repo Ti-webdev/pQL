@@ -86,15 +86,22 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		}
 		return $newProperties;
 	}
-	
-	
-	abstract protected function getTableFields($table);
 
 
-	protected function getSelectIterator(pQL_Select_Builder $select) {
-		$sth = $this->getDbh()->prepare($select->getSQL());
+	final protected function getSelectQuery($sql) {
+		$sth = $this->getDbh()->prepare($sql);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 		$sth->execute();
+		return $sth;
+	}
+	
+	
+	final protected function getSelectIterator($sth) {
 		return new IteratorIterator($sth);
+	}
+	
+
+	final protected function getCountResults($sth) {
+		return $sth->rowCount();
 	}
 }

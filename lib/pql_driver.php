@@ -53,7 +53,9 @@ abstract class pQL_Driver {
 	}
 	
 
-	final function getIterator(pQL_Query_Predicate_List $list) {
+	final function getIterator($queryId, pQL_Query_Predicate_List $list) {
+		if ($this->queryExists($queryId)) return $this->queryList[$queryId][1];
+	
 		$tr = $this->getTranslator();
 		$select = new pQL_Select_Builder;
 		$iterator = new pQL_Query_Iterator($this);
@@ -92,11 +94,63 @@ abstract class pQL_Driver {
 			$iterator->setValueClass($tr->tableToClass($table->getName()), $fields);
 		}
 
-		$iterator->setSelectIterator($this->getSelectIterator($select));
+		$queryResults = $this->getSelectQuery($select->getSQL());
+		$iterator->setSelectIterator($this->getSelectIterator($queryResults));
+		
+		$this->queryList[$queryId] = array($queryResults, $iterator);
+
 		return $iterator;
 	}
 
 
+	private $queryList = array();
+
+
+	private function queryExists($queryId) {
+		return isset($this->queryList[$queryId]);
+	}
 	
-	abstract protected function getSelectIterator(pQL_Select_Builder $select);
+	
+	final function clearQuery($queryId) {
+		if ($this->queryExists($queryId)) unset($this->queryList[$queryId]);
+		return $this;
+	}
+	
+	
+	final function getCount($queryId, pQL_Query_Predicate_List $stack) {
+		$this->getIterator($queryId, $stack);
+		return $this->getCountResults($this->queryList[$queryId][0]);
+	}
+
+
+	/**
+	 * Возращает поля таблицы
+	 * @param string $table
+	 * @return array
+	 */
+	abstract protected function getTableFields($table);
+
+
+	/**
+	 * возращает запрос (в формате конкретного драйвера)
+	 * @param  $sql
+	 * @return mixed
+	 */
+	abstract protected function getSelectQuery($sql);
+	
+	
+	/**
+	 * Возращает итератор запроса
+	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
+	 * @return Iterator
+	 */
+	abstract protected function getSelectIterator($queryResult);
+	
+	
+	/**
+	 * Возращает колличество записей в результате
+	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
+	 * @return int
+	 */
+	abstract protected function getCountResults($queryResult);
 }
