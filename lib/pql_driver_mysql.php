@@ -83,7 +83,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	final protected function updateByPk($table, $fields, $values, $pkValue) {
+	protected function updateByPk($table, $fields, $values, $pkValue) {
 		$pk = $this->getTablePrimaryKey($table);
 		$sql = "UPDATE $table SET ";
 		foreach($fields as $i=>$field) {
@@ -96,10 +96,10 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	final protected function insert($table, $fields, $values) {
+	protected function insert($table, $fields, $values) {
 		if (!$fields) {
 			$fields = array($this->getTablePrimaryKey($table));
-			$values = null;
+			$values = array(null);
 		}
 
 		$sql = "INSERT INTO $table(".implode(',', $fields).") VALUES(";
@@ -114,28 +114,18 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		return mysql_insert_id($this->db);
 	}
 
-/* (non-PHPdoc)
-	 * @see pQL_Driver::getSelectQuery()
-	 */
+
 	protected function getSelectQuery(pQL_Select_Builder $builder) {
-		// TODO Auto-generated method stub
-		
+		return $this->query($builder->getSQL());
 	}
 
-/* (non-PHPdoc)
-	 * @see pQL_Driver::getSelectIterator()
-	 */
+
 	protected function getSelectIterator($queryResult) {
-		// TODO Auto-generated method stub
-		
+		return new pQL_Driver_MySQL_Iterator($queryResult);
 	}
 
-/* (non-PHPdoc)
-	 * @see pQL_Driver::getCountResults()
-	 */
+
 	protected function getCountResults($queryResult) {
-		// TODO Auto-generated method stub
-		
+		return mysql_num_rows($queryResult);
 	}
-
 }

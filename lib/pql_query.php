@@ -66,8 +66,8 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
 		return $this->pQL->driver()->getIterator($this->queryId, $this->stack);
 	}
-	
-	
+
+
 	function count() {
 		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
 		return $this->pQL->driver()->getCount($this->queryId, $this->stack);

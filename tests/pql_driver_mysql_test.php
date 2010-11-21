@@ -70,7 +70,7 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("CREATE TABLE pql_test_b(id INT AUTO_INCREMENT PRIMARY KEY)");
 		$id = $this->pql()->testB()->save()->id;
-		$this->assertEquals($id, $this->db->query("SELECT id FROM pql_test_b")->fetch(PDO::FETCH_OBJ)->id);
+		$this->assertEquals($id, mysql_result($this->exec("SELECT id FROM pql_test_b", $this->db), 0, 0));
 		$this->exec("DROP TABLE pql_test_b");
 	}
 
@@ -137,7 +137,7 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$objectB->test = $object;
 		$objectB->save();
 
-		$this->assertEquals($object->id, $this->db->query("SELECT test FROM pql_test_b")->fetch(PDO::FETCH_OBJ)->test);
+		$this->assertEquals($object->id, mysql_result(mysql_query("SELECT test FROM pql_test_b", $this->db), 0, 0));
 
 		$this->exec("DROP TABLE pql_test_b");
 	}

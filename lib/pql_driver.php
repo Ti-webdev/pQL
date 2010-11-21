@@ -183,16 +183,16 @@ abstract class pQL_Driver {
 	 * @return mixed
 	 */
 	abstract protected function getSelectQuery(pQL_Select_Builder $builder);
-	
-	
+
+
 	/**
 	 * Возращает итератор запроса
 	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
 	 * @return Iterator
 	 */
 	abstract protected function getSelectIterator($queryResult);
-	
-	
+
+
 	/**
 	 * Возращает колличество записей в результате
 	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
