@@ -99,12 +99,11 @@ abstract class pQL_Driver {
 	}
 
 
-
-	final private function buildSelectQuery(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
+	final function buildSelectQuery(pQL_Query_Mediator $mediator) {
 		$tr = $this->getTranslator();
 		$select = new pQL_Select_Builder;
 		$iterator = new pQL_Query_Iterator($this);
-		foreach($list as $predicate) {
+		foreach($mediator->getPredicateList() as $predicate) {
 			switch ($predicate->getType()) {
 				case pQL_Query_Predicate::TYPE_CLASS:
 					$table = $select->registerTable($tr->classToTable($predicate->getSubject()));
@@ -139,29 +138,18 @@ abstract class pQL_Driver {
 			$iterator->setValueClass($tr->tableToClass($table->getName()), $fields);
 		}
 
-		$queryResults = $this->getSelectQuery($select);
-		
-		$queryMediator->setQueryHanlde($queryResults);
-		$queryMediator->setQueryIterator($iterator);
-		$queryMediator->setSelectBuilder($select);
+		$mediator->setQueryIterator($iterator);
+		$mediator->setSelectBuilder($select);
 	}
 	
 
-	final function getIterator(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
-		if ($queryMediator->isEmptyQueryHandle()) $this->buildSelectQuery($queryMediator, $list);
-
+	final function getIterator(pQL_Query_Mediator $queryMediator) {
+		$handle = $queryMediator->getQueryHandle($this);
 		$iterator = $queryMediator->getQueryIterator();
-		$iterator->setSelectIterator($this->getSelectIterator($queryMediator->getQueryHandle()));
-		
+		$iterator->setSelectIterator($this->getSelectIterator($handle));
 		return $iterator;
 	}
 
-
-	
-	final function getCount(pQL_Query_Mediator $queryMediator, pQL_Query_Predicate_List $list) {
-		if ($queryMediator->isEmptyQueryHandle()) $this->buildSelectQuery($queryMediator, $list);
-		return $this->getCountResults($queryMediator->getQueryHandle());
-	}
 
 
 	/**
@@ -190,8 +178,7 @@ abstract class pQL_Driver {
 
 	/**
 	 * Возращает колличество записей в результате
-	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
 	 * @return int
 	 */
-	abstract protected function getCountResults($queryResult);
+	abstract function getCount(pQL_Query_Mediator $queryMediator);
 }

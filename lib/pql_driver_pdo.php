@@ -69,7 +69,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	protected function getCountResults($sth) {
-		return $sth->rowCount();
+	final function getCount(pQL_Query_Mediator $queryMediator) {
+		return $queryMediator->getQueryHandle($this)->rowCount();
 	}
 }

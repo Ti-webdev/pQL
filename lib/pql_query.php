@@ -6,7 +6,6 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function __construct(pQL $pQL) {
 		$this->pQL = $pQL;
 		$this->stack = new pQL_Query_Predicate_List;
-		
 	}
 
 	
@@ -52,7 +51,10 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	
 	private function getQueryMediator() {
-		if (!$this->queryMediator) $this->queryMediator = new pQL_Query_Mediator;
+		if (!$this->queryMediator) {
+			$this->queryMediator = new pQL_Query_Mediator;
+			$this->queryMediator->setPredicateList($this->stack);
+		}
 		return $this->queryMediator;
 	}
 

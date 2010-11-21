@@ -40,18 +40,9 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	}
 
 
-	protected function getSelectQuery(pQL_Select_Builder $builder) {
-		return array(parent::getSelectQuery($builder), $builder);
-	}
 
-
-	protected function getSelectIterator($query) {
-		return parent::getSelectIterator($query[0]);
-	}
-
-
-	protected function getCountResults($query) {
-		$sql = 'SELECT COUNT(*) '.$query[1]->getSQLSuffix();
+	protected function getCount(pQL_Query_Mediator $mediator) {
+		$sql = 'SELECT COUNT(*) '.$mediator->getSelectBuilder()->getSQLSuffix();
 		return $this->getDbh()->query($sql)->fetchColumn(0);
 	}
 }

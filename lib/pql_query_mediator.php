@@ -9,7 +9,7 @@ final class pQL_Query_Mediator {
 	private $iterator;
 	private $needRefrashResults = false;
 	private $selectBuilder;
-	
+	private $predicateList;
 	
 	function setQueryHanlde($queryHanlde) {
 		$this->queryHandle = $queryHanlde;
@@ -17,7 +17,10 @@ final class pQL_Query_Mediator {
 	}
 	
 	
-	function getQueryHandle() {
+	function getQueryHandle(pQL_Driver $driver) {
+		if (!$this->selectBuilder) {
+			$driver->buildSelectQuery($driver);
+		}
 		return $this->queryHandle;
 	}
 	
@@ -37,9 +40,25 @@ final class pQL_Query_Mediator {
 		$this->selectBuilder = $select;
 		return $this;
 	}
-	
-	
-	function isEmptyQueryHandle() {
+
+
+	function getSelectBuilder() {
+		return $this->selectBuilder;
+	}
+
+
+	function isEmptySelectBuilder() {
 		return empty($this->queryHandle);
+	}
+
+
+	function setPredicateList(pQL_Query_Predicate_List $predicateList) {
+		$this->predicateList = $predicateList;
+		return $this;
+	}
+
+
+	function getPredicateList() {
+		return $this->predicateList;
 	}
 }
