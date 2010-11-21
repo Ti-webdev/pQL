@@ -18,11 +18,6 @@ abstract class pQL_Driver_PDO_Test_Abstract extends pQL_Driver_Test_Abstract {
 	}
 	
 	
-	protected function pql() {
-		return $this->creater;
-	}
-	
-	
 	function exec($sql) {
 		return $this->db->exec($sql);
 	}

@@ -45,7 +45,53 @@ abstract class pQL_Driver {
 
 
 	abstract function findByPk($class, $value);
-	abstract function save($class, $newProperties, $oldProperties);
+
+
+	private function isPqlObject($value) {
+		return is_object($value) and $value instanceof pQL_Object;
+	}
+
+
+	private function getPqlId(pQL_Object $object) {
+		$tr = $this->getTranslator();
+		$foreignTable = $tr->classToTable($object->getClass());
+		$foreignKey = $this->getTablePrimaryKey($foreignTable);
+		return $object->get($tr->fieldToProperty($foreignKey));
+	}
+
+	
+	final function save($class, $newProperties, $oldProperties) {
+		$tr = $this->getTranslator();
+		$table = $tr->classToTable($class);
+		$pk = $this->getTablePrimaryKey($table);
+		$pkProperty = $tr->fieldToProperty($pk);
+		$values = $fields = array();
+		$isUpdate = isset($oldProperties[$pkProperty]);
+		foreach($newProperties as $key=>$value) {
+			$field = $tr->propertyToField($key);
+			
+			// foreignTable
+			if ($this->isPqlObject($value)) $value = $this->getPqlId($value);
+			
+			$fields[] = $field;
+			$values[] = $value;
+		}
+		if ($isUpdate) {
+			if (!$fields) return $newProperties;
+			if (!$pk) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined");
+			$this->updateByPk($table, $fields, $values, $oldProperties[$pkProperty]);
+		}
+		else {
+			if (!$pk and !$fields) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined"); 
+			$id = $this->insert($table, $fields, $values);
+			if ($pk) $newProperties[$pkProperty] = $id;
+		}
+		return $newProperties;
+	}
+
+
+	abstract protected function updateByPk($table, $fields, $values, $pkValue);
+	abstract protected function insert($table, $fields, $values);
 
 
 	final function getObject($class, $properties = array()) {

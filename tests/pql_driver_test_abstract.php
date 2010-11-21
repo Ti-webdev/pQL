@@ -20,6 +20,11 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->pql = null;
 		$this->exec("DROP TABLE IF EXISTS pql_test");
 	}
+	
+	
+	protected function pql() {
+		return $this->creater;
+	}
 
 	
 	function testToString() {
