@@ -32,7 +32,6 @@ class pQL_Driver_MySQL_Iterator implements Iterator {
 
 
 	function rewind() {
-		if (!is_null($this->key)) mysql_data_seek($this->query, 0);
 		$this->key = -1;
 		$this->next();
 	}

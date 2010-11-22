@@ -115,17 +115,33 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	protected function getSelectQuery(pQL_Select_Builder $builder) {
+	function getSelectHandle(pQL_Select_Builder $builder) {
 		return $this->query($builder->getSQL());
 	}
 
 
-	protected function getSelectIterator($queryResult) {
-		return new pQL_Driver_MySQL_Iterator($queryResult);
+	/**
+	 * пересоздавать запрос не надо - будем перематывать
+	 * @see pQL_Driver::needRecreateSelectHandle()
+	 * @see pQL_Driver_MySQL::getSelectIterator()
+	 */
+	protected function needRecreateSelectHandle(pQL_Query_Mediator $queryMediator) {
+		return false;
 	}
 
 
-	protected function getCountResults($queryResult) {
-		return mysql_num_rows($queryResult);
+	protected function getSelectIterator(pQL_Query_Mediator $queryMediator) {
+		$handle = $queryMediator->getSelectHandle($this);
+
+		// перематываем запрос на начало
+		if ($queryMediator->getIsDone()) mysql_data_seek($handle, 0);
+		else $queryMediator->setIsDone();
+
+		return new pQL_Driver_MySQL_Iterator($handle);
+	}
+
+
+	function getCount(pQL_Query_Mediator $mediator) {
+		return mysql_num_rows($mediator->getSelectHandle($this));
 	}
 }

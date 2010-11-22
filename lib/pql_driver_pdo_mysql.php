@@ -45,4 +45,9 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		$q->setFetchMode(PDO::FETCH_COLUMN, 0);
 		return $q;
 	}
+
+
+	function getCount(pQL_Query_Mediator $queryMediator) {
+		return $queryMediator->getSelectHandle($this)->rowCount();
+	}
 }

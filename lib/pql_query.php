@@ -63,13 +63,11 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @see IteratorAggregate::getIterator()
 	 */
 	function getIterator() {
-		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
-		return $this->pQL->driver()->getIterator($this->getQueryMediator(), $this->stack);
+		return $this->pQL->driver()->getIterator($this->getQueryMediator());
 	}
 
 
 	function count() {
-		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
-		return $this->pQL->driver()->getCount($this->getQueryMediator(), $this->stack);
+		return $this->pQL->driver()->getCount($this->getQueryMediator());
 	}
 }

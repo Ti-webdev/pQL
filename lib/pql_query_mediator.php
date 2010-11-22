@@ -5,50 +5,50 @@
  * @author Ti
  */
 final class pQL_Query_Mediator {
-	private $queryHandle;
-	private $iterator;
-	private $needRefrashResults = false;
+	private $selectHandle;
+	private $queryIterator;
 	private $selectBuilder;
 	private $predicateList;
-	
-	function setQueryHanlde($queryHanlde) {
-		$this->queryHandle = $queryHanlde;
-		return $this;
-	}
-	
-	
-	function getQueryHandle(pQL_Driver $driver) {
-		if (!$this->selectBuilder) {
-			$driver->buildSelectQuery($driver);
-		}
-		return $this->queryHandle;
-	}
-	
-	
-	function getQueryIterator() {
-		return $this->iterator;
-	}
-	
-	
-	function setQueryIterator($iterator) {
-		$this->iterator = $iterator;
-		return $this;
-	}
-	
-	
-	function setSelectBuilder($select) {
-		$this->selectBuilder = $select;
+	private $isDone = false;
+
+
+	function removeSelectHandle() {
+		$this->selectHandle = null;
 		return $this;
 	}
 
 
-	function getSelectBuilder() {
+	function getSelectHandle(pQL_Driver $driver) {
+		if (!$this->selectHandle) $this->selectHandle = $driver->getSelectHandle($this->getSelectBuilder($driver));
+		return $this->selectHandle;
+	}
+
+
+	function getQueryIterator(pQL_Driver $driver) {
+		if (!$this->selectBuilder) $driver->buildSelectQuery($this);
+		return $this->queryIterator;
+	}
+
+
+	function setQueryIterator(pQL_Query_Iterator $queryIterator) {
+		$this->queryIterator = $queryIterator;
+		return $this;
+	}
+
+
+	function setSelectBuilder(pQL_Select_Builder $selectBuilder) {
+		$this->selectBuilder = $selectBuilder;
+		return $this;
+	}
+
+
+	/**
+	 * @param pQL_Driver $driver
+	 * @return pQL_Select_Builder
+	 */
+	function getSelectBuilder(pQL_Driver $driver) {
+		if (!$this->selectBuilder) $driver->buildSelectQuery($this);
 		return $this->selectBuilder;
-	}
-
-
-	function isEmptySelectBuilder() {
-		return empty($this->queryHandle);
 	}
 
 
@@ -59,6 +59,18 @@ final class pQL_Query_Mediator {
 
 
 	function getPredicateList() {
+		$this->predicateList->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
 		return $this->predicateList;
+	}
+	
+	
+	function getIsDone() {
+		return $this->isDone;
+	}
+	
+	
+	function setIsDone() {
+		$this->isDone = true;
+		return $this;
 	}
 }

@@ -144,12 +144,11 @@ abstract class pQL_Driver {
 	
 
 	final function getIterator(pQL_Query_Mediator $queryMediator) {
-		$handle = $queryMediator->getQueryHandle($this);
-		$iterator = $queryMediator->getQueryIterator();
-		$iterator->setSelectIterator($this->getSelectIterator($handle));
-		return $iterator;
+		if ($this->needRecreateSelectHandle($queryMediator)) $queryMediator->removeSelectHandle();
+		$result = $queryMediator->getQueryIterator($this);
+		$result->setSelectIterator($this->getSelectIterator($queryMediator));
+		return $result;
 	}
-
 
 
 	/**
@@ -165,7 +164,7 @@ abstract class pQL_Driver {
 	 * @param pQL_Select_Builder $builder
 	 * @return mixed
 	 */
-	abstract protected function getSelectQuery(pQL_Select_Builder $builder);
+	abstract function getSelectHandle(pQL_Select_Builder $builder);
 
 
 	/**
@@ -173,7 +172,7 @@ abstract class pQL_Driver {
 	 * @param mixer $queryResult запрос (в формате конкретного драйвера)
 	 * @return Iterator
 	 */
-	abstract protected function getSelectIterator($queryResult);
+	abstract protected function getSelectIterator(pQL_Query_Mediator $queryMediator);
 
 
 	/**
@@ -181,4 +180,18 @@ abstract class pQL_Driver {
 	 * @return int
 	 */
 	abstract function getCount(pQL_Query_Mediator $queryMediator);
+	
+	
+	/**
+	 * Проверяет выполнен ли запрос
+	 * Возрашает true для пересоздания запроса
+	 * Используется для повтороной итерации в драйверах не поддреживающих перемещение на начало
+	 * 
+	 * @param pQL_Query_Mediator $queryMediator
+	 */
+	protected function needRecreateSelectHandle(pQL_Query_Mediator $queryMediator) {
+		if ($queryMediator->getIsDone()) return true;
+		$queryMediator->setIsDone();
+		return false;
+	}
 }
