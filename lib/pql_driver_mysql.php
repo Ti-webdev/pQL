@@ -144,4 +144,14 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	function getCount(pQL_Query_Mediator $mediator) {
 		return mysql_num_rows($mediator->getSelectHandle($this));
 	}
+
+
+	function getIsNull($partSql) {
+		return "ISNULL($partSql)";
+	}
+
+
+	final function getParam(pQL_Select_Builder_Field $field, $val) {
+		return $this->quote($val);
+	}
 }

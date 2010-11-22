@@ -1,5 +1,11 @@
 <?php
 final class pQL_Select_Builder {
+	private $driver;
+	function __construct(pQL_Driver $driver) {
+		$this->driver = $driver;
+	}
+	
+	
 	private $registeredTables = array();
 	/**
 	 * Регистрирует талбицу (но не добавлет в выбоку!)
@@ -15,6 +21,20 @@ final class pQL_Select_Builder {
 			$this->registeredTables[$tableName] = $rTable;
 		}
 		return $rTable;
+	}
+
+
+	private $equals = array();
+	function setEquals(pQL_Select_Builder_Field $rField, $value) {
+		$this->equals[$this->getFieldNum($rField)][] = $value;
+		return $this;
+	}
+
+
+	private $null = array();
+	function setIsNull(pQL_Select_Builder_Field $rField) {
+		$this->null[] = $this->getFieldAlias($rField);
+		return $this;
 	}
 
 
@@ -66,8 +86,8 @@ final class pQL_Select_Builder {
 		if (false === $index) $index = array_push($this->fields, $rField) - 1;
 		return $index;
 	}
-	
-	
+
+
 	private function getSQLFields() {
 		$result = '';
 		foreach($this->fields as $fieldNum=>$rField) {
@@ -103,6 +123,42 @@ final class pQL_Select_Builder {
 			$result .= ' AS ';
 			$result .= $this->getTableAlias($rTable);
 		}
+		return ' FROM '.$result;
+	}
+	
+	
+	private function getWherePrefix(&$isFirst) {
+		if ($isFirst) {
+			$isFirst = false;
+			return ' WHERE ';
+		}
+		return ' AND ';
+	}
+
+
+	private function getSQLWhere() {
+		$result = '';
+		$isFirst = true;
+		foreach($this->equals as $num=>$vals) {
+			$rField = $this->fields[$num];
+			$result .= $this->getWherePrefix($isFirst);
+			$result .= $this->getTableAlias($rField->getTable()).'.'.$rField->getName();
+			if (1 < count($vals)) {
+				$result .= ' IN(';
+				foreach($vals as $i=>$val) {
+					if ($i) $result .= ', ';
+					$result .= $this->driver->getParam($rField, $val);
+				}
+				$result .= ')';
+			}
+			else {
+				$result .= ' = '.$this->driver->getParam($rField, reset($vals));
+			}
+		}
+		foreach($this->null as $field) {
+			$result .= $this->getWherePrefix($isFirst);
+			$result .= $this->driver->getIsNull($field);
+		}
 		return $result;
 	}
 
@@ -111,49 +167,12 @@ final class pQL_Select_Builder {
 	 * Возращает часть запроса, начиная с FROM
 	 */
 	function getSQLSuffix() {
-		return 'FROM '.$this->getSQLFrom();
+		return $this->getSQLFrom().$this->getSQLWhere();
 	}
 
 
 	function getSQL() {
-		$sql = 'SELECT '.$this->getSQLFields().' '.$this->getSQLSuffix();
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix();
 		return $sql;
-	}
-}
-
-
-final class pQL_Select_Builder_Table {
-	private $name;
-
-
-	function __construct($name) {
-		$this->name = $name;
-	}
-	
-	
-	function getName() {
-		return $this->name;
-	}
-}
-
-
-final class pQL_Select_Builder_Field {
-	private $table;
-	private $name;
-
-
-	function __construct(pQL_Select_Builder_Table $table, $name) {
-		$this->table = $table;
-		$this->name = $name;
-	}
-	
-	
-	function getName() {
-		return $this->name;
-	}
-
-
-	function getTable() {
-		return $this->table;
 	}
 }

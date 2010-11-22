@@ -3,6 +3,7 @@ final class pQL_Query_Predicate {
 	const TYPE_CLASS = 1;
 	const TYPE_PROPERTY = 2;
 	const TYPE_KEY = 3;
+	const TYPE_IN = 4;
 
 
 	private $type;

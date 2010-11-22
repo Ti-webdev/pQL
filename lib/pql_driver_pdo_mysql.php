@@ -50,4 +50,9 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	function getCount(pQL_Query_Mediator $queryMediator) {
 		return $queryMediator->getSelectHandle($this)->rowCount();
 	}
+
+
+	function getIsNull($partSql) {
+		return "ISNULL($partSql)";
+	}
 }

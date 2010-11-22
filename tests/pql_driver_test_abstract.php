@@ -169,7 +169,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(count($vals), count($q));
 		
 
-		// again foreach!
+		// foreach again!
 		$valsCopy = $vals;
 		foreach($q as $v) {
 			$i = array_search($v->val, $valsCopy);
@@ -177,23 +177,26 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 		if ($valsCopy) $this->fail('valsCopy assert empty!');
 	}
-
-
-	function _testIn() {
-		$this->exec("CREATE TABLE pql_test(val VARCHAR(255)");
+	
+	
+	function testIn() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
 		
-		foreach(array('one', 'two', 'three') as $val) { 
+		foreach(array('one', 'two', 'three', null) as $val) { 
 			$object = $this->pql()->test();
 			$object->val = $val;
 			$object->save();
 		}
 
-		$q = $this->pql()->test->val->in('two');
-		$this->assertEquals(1, count($q));
-		foreach($q as $object) {
-			
+		foreach(array('one', 'two', 'three') as $expected) {
+			$q = $this->pql()->test->val->in($expected);
+			$this->assertEquals(1, count($q), "invalid count for '$expected'");
+			$found = 0;
+			foreach($q as $object) {
+				$this->assertEquals($expected, $object->val);
+				$found++;
+			}
+			if (1 !== $found) $this->fail("'$expected': $found results");
 		}
-
-		$this->fail('object not found');
 	}
 }

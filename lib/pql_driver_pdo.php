@@ -68,4 +68,9 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		$sth->setFetchMode(PDO::FETCH_NUM);
 		return new IteratorIterator($sth);
 	}
+
+
+	final function getParam(pQL_Select_Builder_Field $field, $val) {
+		return $this->getDbh()->quote($val);
+	}
 }

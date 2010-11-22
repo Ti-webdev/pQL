@@ -101,7 +101,7 @@ abstract class pQL_Driver {
 
 	final function buildSelectQuery(pQL_Query_Mediator $mediator) {
 		$tr = $this->getTranslator();
-		$select = new pQL_Select_Builder;
+		$select = new pQL_Select_Builder($this);
 		$iterator = new pQL_Query_Iterator($this);
 		foreach($mediator->getPredicateList() as $predicate) {
 			switch ($predicate->getType()) {
@@ -110,11 +110,19 @@ abstract class pQL_Driver {
 					break;
 
 				case pQL_Query_Predicate::TYPE_PROPERTY:
-					$filed = $select->registerField($table, $tr->propertyToField($predicate->getSubject()));
+					$field = $select->registerField($table, $tr->propertyToField($predicate->getSubject()));
 					break;
 
 				case pQL_Query_Predicate::TYPE_KEY:
-					$iterator->setKeyIndex($select->getFieldNum($filed));
+					$iterator->setKeyIndex($select->getFieldNum($field));
+					break;
+
+				case pQL_Query_Predicate::TYPE_IN:
+					foreach($predicate->getSubject() as $value) {
+						if (is_null($value)) $select->setIsNull($field, $value);
+						else $select->setEquals($field, $value);
+					}
+
 					break;
 
 				default:
@@ -124,7 +132,7 @@ abstract class pQL_Driver {
 
 		if (pQL_Query_Predicate::TYPE_PROPERTY === $predicate->getType()) {
 			// в значениях поле
-			$iterator->setValueIndex($select->getFieldNum($filed));
+			$iterator->setValueIndex($select->getFieldNum($field));
 		}
 		else {
 			// в значениях - объект
@@ -193,5 +201,13 @@ abstract class pQL_Driver {
 		if ($queryMediator->getIsDone()) return true;
 		$queryMediator->setIsDone();
 		return false;
+	}
+	
+	
+	abstract function getParam(pQL_Select_Builder_Field $field, $val);
+	
+	
+	function getIsNull($partSql) {
+		return "$partSql ISNULL";
 	}
 }

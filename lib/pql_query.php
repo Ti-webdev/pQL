@@ -70,4 +70,16 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function count() {
 		return $this->pQL->driver()->getCount($this->getQueryMediator());
 	}
+
+
+	function in($arg) {
+		$this->assertPropertyDefined();
+		$arr = array();
+		foreach(func_get_args() as $arg) {
+			if (is_array($arg)) $arr = array_merge($arr, $arg);
+			else $arr[] = $arg;
+		}
+		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_IN, $arr));
+		return $this;
+	}
 }
