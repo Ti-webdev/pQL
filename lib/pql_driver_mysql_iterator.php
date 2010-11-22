@@ -1,5 +1,5 @@
 <?php
-class pQL_Driver_MySQL_Iterator implements Iterator {
+class pQL_Driver_MySQL_Iterator implements SeekableIterator {
 	private $query;
 	private $current;
 	private $key;
@@ -34,5 +34,10 @@ class pQL_Driver_MySQL_Iterator implements Iterator {
 	function rewind() {
 		$this->key = -1;
 		$this->next();
+	}
+
+
+	function seek($position) {
+		mysql_data_seek($this->query, $position);
 	}
 }
