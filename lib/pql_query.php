@@ -1,10 +1,10 @@
 <?php
 final class pQL_Query implements IteratorAggregate, Countable {
 	static private $instance = 0;
-	private $pQL;
+	private $driver;
 	private $queryMediator;
-	function __construct(pQL $pQL) {
-		$this->pQL = $pQL;
+	function __construct(pQL_Driver $driver) {
+		$this->driver = $driver;
 		$this->stack = new pQL_Query_Predicate_List;
 	}
 
@@ -63,12 +63,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @see IteratorAggregate::getIterator()
 	 */
 	function getIterator() {
-		return $this->pQL->driver()->getIterator($this->getQueryMediator());
+		return $this->driver->getIterator($this->getQueryMediator());
 	}
 
 
 	function count() {
-		return $this->pQL->driver()->getCount($this->getQueryMediator());
+		return $this->driver->getCount($this->getQueryMediator());
 	}
 
 
@@ -81,5 +81,10 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		}
 		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_IN, $arr));
 		return $this;
+	}
+	
+	
+	function __toString() {
+		return $this->getQueryMediator()->getSelectBuilder($this->driver)->getSQL();
 	}
 }

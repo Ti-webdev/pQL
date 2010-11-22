@@ -16,7 +16,14 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 
 
 	function exec($sql) {
-		return mysql_query($sql, $this->db);
+		$result = mysql_query($sql, $this->db); 
+		if (!$result) throw new Exception(mysql_error($this->db)."\nSQL: $sql");
+		return $result;
+	}
+	
+	
+	function quote($val) {
+		return is_null($val) ? 'NULL' : '"'.mysql_real_escape_string($val, $this->db).'"';
 	}
 
 

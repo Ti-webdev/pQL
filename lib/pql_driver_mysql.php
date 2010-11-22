@@ -151,7 +151,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	final function getParam(pQL_Select_Builder_Field $field, $val) {
+	final function getParam($val) {
 		return $this->quote($val);
 	}
 }

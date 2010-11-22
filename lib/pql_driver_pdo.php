@@ -70,7 +70,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	final function getParam(pQL_Select_Builder_Field $field, $val) {
+	final function getParam($val) {
 		return $this->getDbh()->quote($val);
 	}
 }

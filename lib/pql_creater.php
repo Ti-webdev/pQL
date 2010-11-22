@@ -5,7 +5,7 @@
  * @package pQL
  */
 final class pQL_Creater {
-	function __construct(pQL $pql) {
+	function __construct(pQl $pql) {
 		$this->pQL = $pql;
 	}
 
@@ -27,7 +27,7 @@ final class pQL_Creater {
 
 
 	function __get($key) {
-		$q = new pQL_Query($this->pQL);
+		$q = new pQL_Query($this->pQL->driver());
 		return $q->$key;
 	}
 }

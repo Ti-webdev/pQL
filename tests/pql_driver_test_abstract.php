@@ -7,6 +7,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	
 	abstract function setUpPql();
 	abstract function exec($sql);
+	abstract function quote($val);
 	
 	
 	function setUp() {
@@ -182,15 +183,14 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function testIn() {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
 		
-		foreach(array('one', 'two', 'three', null) as $val) { 
-			$object = $this->pql()->test();
-			$object->val = $val;
-			$object->save();
+		$vals = array('one', 'two', 'three', null, "'quoted string\"");
+		foreach($vals as $val) {
+			$this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
 		}
 
-		foreach(array('one', 'two', 'three') as $expected) {
+		foreach($vals as $expected) {
 			$q = $this->pql()->test->val->in($expected);
-			$this->assertEquals(1, count($q), "invalid count for '$expected'");
+			$this->assertEquals(1, count($q), "invalid count for '$expected'\nSQL: $q");
 			$found = 0;
 			foreach($q as $object) {
 				$this->assertEquals($expected, $object->val);

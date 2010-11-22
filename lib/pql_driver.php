@@ -101,7 +101,7 @@ abstract class pQL_Driver {
 
 	final function buildSelectQuery(pQL_Query_Mediator $mediator) {
 		$tr = $this->getTranslator();
-		$select = new pQL_Select_Builder($this);
+		$select = new pQL_Select_Builder;
 		$iterator = new pQL_Query_Iterator($this);
 		foreach($mediator->getPredicateList() as $predicate) {
 			switch ($predicate->getType()) {
@@ -118,11 +118,15 @@ abstract class pQL_Driver {
 					break;
 
 				case pQL_Query_Predicate::TYPE_IN:
+					$fieldName = $select->getTableAlias($table).'.'.$field->getName();
 					foreach($predicate->getSubject() as $value) {
-						if (is_null($value)) $select->setIsNull($field, $value);
-						else $select->setEquals($field, $value);
+						if (is_null($value)) {
+							$select->addWhere($this->getIsNull($fieldName));
+						}
+						else {
+							$select->addWhere($fieldName.' = '.$this->getParam($value));
+						}
 					}
-
 					break;
 
 				default:
@@ -204,7 +208,7 @@ abstract class pQL_Driver {
 	}
 	
 	
-	abstract function getParam(pQL_Select_Builder_Field $field, $val);
+	abstract function getParam($val);
 	
 	
 	function getIsNull($partSql) {

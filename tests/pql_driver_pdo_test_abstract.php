@@ -23,8 +23,12 @@ abstract class pQL_Driver_PDO_Test_Abstract extends pQL_Driver_Test_Abstract {
 	}
 	
 	
-	
 	function setUpPql() {
 		$this->pql = pQL::PDO($this->db);
+	}
+	
+	
+	function quote($val) {
+		return is_null($val) ? 'NULL' : $this->db->quote($val);
 	}
 }
