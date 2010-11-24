@@ -1,61 +1,132 @@
 <?php
 final class pQL_Query implements IteratorAggregate, Countable {
-	static private $instance = 0;
 	private $driver;
-	private $queryMediator;
+
+
+	/**
+	 * @var pQL_Query_Builder
+	 */
+	private $builder;
+
+
+	/**
+	 * Последняя запрошенная таблица
+	 * @var pQL_Query_Builder_Table
+	 */
+	private $bTable;
+
+
+	/**
+	 * Последнее запрошенное поле
+	 * @var pQL_Query_Builder_Field
+	 */
+	private $bField;
+
+
 	function __construct(pQL_Driver $driver) {
 		$this->driver = $driver;
-		$this->stack = new pQL_Query_Predicate_List;
+		$this->builder = new pQL_Query_Builder;
 	}
 
+
+	/**
+	 * При изменении параметров запроса необходимо
+	 * очищать результат предыдущей выборки
+	 */
+	private function cleanResult() {
+		/**
+		 * @todo
+		 */
+	}
+
+
+	/**
+	 * Переход на уровень таблицы или поля
+	 * @param string $oName
+	 * @return pQL_Query
+	 */
+	function __get($name) {
+		$this->cleanResult();
+
+		// Если таблица установлена - выбираем поле
+		if ($this->bTable) $this->setField($name);
+		// Иначе устанавливаем талбицу
+		else $this->setClass($name);
+
+		return $this;
+	}
+
+
+	private function setTable($className) {
+		$name = $this->driver->classToTable($className);
+		$this->bTable = $this->builder->registerTable($name);
+		$this->bField = null;
+	}
+
+
+	private function setField($propertyName) {
+		$name = $this->driver->propertyToField($propertyName);
+		$this->bField = $this->builder->registerField($this->bTable, $name);
+	}
 	
-	private $query = array();
-	function __get($key) {
-		$type = pQL_Query_Predicate::TYPE_CLASS;
-		$this->stack->setIteratorMode(SplDoublyLinkedList::IT_MODE_LIFO);
-		foreach($this->stack as $predicate) {
-			if (pQL_Query_Predicate::TYPE_CLASS === $predicate->getType()) {
-				$type = pQL_Query_Predicate::TYPE_PROPERTY;
-				break;
-			}
-		}
-		$this->stack->push(new pQL_Query_Predicate($type, $key));
-		$this->queryMediator = null;
+
+	/**
+	 * Переход на уровень базы
+	 * @return pQL_Query
+	 */
+	private function db() {
+		$this->bField = null;
+		$this->bTable = null;
 		return $this;
 	}
 	
 	
+	/**
+	 * @var pQL_Query_Builder_Field
+	 */
+	private $bKeyField;
+
+
+	/**
+	 * Устанавливает значения свойства в качестве ключей выборки
+	 * @return pQL_Query
+	 */
 	function key() {
 		$this->assertPropertyDefined();
-		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_KEY));
-		$this->queryMediator = null;
+
+		$this->cleanResult();
+
+		$this->bKeyField = $this->bField;
+
+		return $this;
+	}
+
+
+	private $bValue;
+	/**
+	 * Устанавливает свойство или тип объекта в качестве значений выборки
+	 * 
+	 * @return pQL_Query
+	 */
+	function value() {
+		$this->assertClassDefined();
+		$this->cleanResult();
+		
+		if ($this->bField) $this->bValue = $this->bField;
+		else $this->bValue = $this->bTable;
+		
 		return $this;
 	}
 
 
 	private function assertClassDefined() {
-		foreach($this->stack as $predicate) {
-			if (pQL_Query_Predicate::TYPE_CLASS === $predicate->getType()) return;
-		}
-		throw new pQL_Exception('Select class first!');
+		if (!$this->bTable) throw new pQL_Exception('Select class first!');
 	}
 
 
 	private function assertPropertyDefined() {
 		$this->assertClassDefined();
-		foreach($this->stack as $predicate) {
-			if (pQL_Query_Predicate::TYPE_PROPERTY === $predicate->getType()) return;
-		}
-		throw new pQL_Exception('Select property first!');
-	}
-	
-	
-	private function getQueryMediator() {
-		if (!$this->queryMediator) {
-			$this->queryMediator = new pQL_Query_Mediator;
-			$this->queryMediator->setPredicateList($this->stack);
-		}
-		return $this->queryMediator;
+		if (!$this->bField) throw new pQL_Exception('Select property first!');
 	}
 
 
@@ -63,28 +134,54 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @see IteratorAggregate::getIterator()
 	 */
 	function getIterator() {
-		return $this->driver->getIterator($this->getQueryMediator());
+		return $this->driver->getIterator();
 	}
 
 
 	function count() {
-		return $this->driver->getCount($this->getQueryMediator());
+		return $this->driver->getCount();
+	}
+	
+	
+	private function isNull() {
+		$field = $this->getWhereField();
+		$expression = $this->driver->getIsNull();
+		$this->builder->addWhere($expression);
 	}
 
 
-	function in($arg) {
+	private function getWhereField() {
+		$result = $this->builder->getTableAlias($this->bTable);
+		$result .= '.';
+		$result .= $this->bField->getName();
+		return $result;
+	}
+	
+
+	function in($val) {
 		$this->assertPropertyDefined();
-		$arr = array();
-		foreach(func_get_args() as $arg) {
-			if (is_array($arg)) $arr = array_merge($arr, $arg);
-			else $arr[] = $arg;
+
+		$expression = $this->getWhereField();
+
+		$expression .= ' IN (';
+		$first = true;
+		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator(func_get_args()));
+		foreach($vals as $val) {
+			if (is_null($val)) $this->isNull();
+			if ($first) $first = false;
+			else $expression .= ',';
+			$this->driver->quote($val);
 		}
-		$this->stack->push(new pQL_Query_Predicate(pQL_Query_Predicate::TYPE_IN, $arr));
+		if (!$first) {
+			$expression .= ')';
+			$this->builder->addWhere($expression);
+		}
+		
 		return $this;
 	}
 	
 	
 	function __toString() {
-		return $this->getQueryMediator()->getSelectBuilder($this->driver)->getSQL();
+		return (string) $this->builder->getSQL();
 	}
 }

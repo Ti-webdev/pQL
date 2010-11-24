@@ -89,11 +89,44 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			$expected['last'][] = $object->last = - rand(0, PHP_INT_SIZE);
 			$object->save();
 		}
-	
+
 		$i = 0;
-		foreach($this->pql()->test->last->key()->number as $last=>$number) {
+		foreach($this->pql()->test->last->key() as $last=>$object) {
 			$this->assertEquals($expected['last'][$i], $last);
+			$this->assertEquals($last, $object->last);
+			$this->assertEquals($expected['number'][$i], $object->number);
+			$i++;
+		}
+		$this->assertEquals(count($expected['first']), $i);
+	}
+	
+	
+	function getValueIterator() {
+		$this->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
+
+		$expected = array();
+		for($i = 0; $i<10; $i++) {
+			$object = $this->pql()->test();
+			$expected['first'][] = $object->first = rand(0, PHP_INT_SIZE);
+			$expected['number'][] = $object->number = md5(microtime(true));
+			$expected['last'][] = $object->last = - rand(0, PHP_INT_SIZE);
+			$object->save();
+		}
+
+		foreach($this->pql()->test->number->value()->db() as $i=>$number) {
 			$this->assertEquals($expected['number'][$i], $number);
+		}
+		$this->assertEquals(count($expected['first']), $i+1);
+
+		foreach($this->pql()->test->value()->db() as $i=>$object) {
+			$this->assertEquals($expected['number'][$i], $object->number);
+		}
+		$this->assertEquals(count($expected['first']), $i+1);
+
+		$i = 0;
+		foreach($this->pql()->test->number->value()->last->key() as $last=>$object) {
+			$this->assertEquals($expected['last'][$i], $last);
+			$this->assertEquals($expected['number'][$i], $object->number);
 			$i++;
 		}
 		$this->assertEquals(count($expected['first']), $i);
@@ -198,5 +231,28 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			}
 			if (1 !== $found) $this->fail("'$expected': $found results");
 		}
+	}
+	
+	
+	function testModifyQuery() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		
+		$vals = array('one', 'two', 'three', null, "'quoted string\"");
+		foreach($vals as $val) {
+			$this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
+		}
+
+		// count
+		$q = $this->pql->val;
+		$this->assertEquals(5, count($q));
+		$q->in('two', 'three'); // modify
+		$this->assertEquals(2, count($q));
+		
+		// fetch
+		$q = $this->pql->val->value();
+		foreach($q as $i=>$val) $this->assertEquals($vals[$i], $val);
+		
+		$actual = array();
+		$this->assertEquals(array('two', null), iterator_to_array($q->val->in('bugaaa', 'two', null, 5)));
 	}
 }

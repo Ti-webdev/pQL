@@ -1,20 +1,20 @@
 <?php
-final class pQL_Select_Builder {
+final class pQL_Query_Builder {
 	private $registeredTables = array();
 	/**
 	 * Регистрирует талбицу (но не добавлет в выбоку!)
-	 * @param pQL_Select_Builder_Table $tableName
-	 * @return pQL_Select_Builder_Table
+	 * @param pQL_Query_Builder_Table $tableName
+	 * @return pQL_Query_Builder_Table
 	 */
 	function registerTable($tableName) {
 		if (isset($this->registeredTables[$tableName])) {
-			$rTable = $this->registeredTables[$tableName];
+			$bTable = $this->registeredTables[$tableName];
 		}
 		else {
-			$rTable = new pQL_Select_Builder_Table($tableName);
-			$this->registeredTables[$tableName] = $rTable;
+			$bTable = new pQL_Query_Builder_Table($tableName);
+			$this->registeredTables[$tableName] = $bTable;
 		}
-		return $rTable;
+		return $bTable;
 	}
 
 
@@ -24,18 +24,18 @@ final class pQL_Select_Builder {
 	/**
 	 * Регистрирует поле (но не добавлет в выбоку!)
 	 * 
-	 * @param pQL_Select_Builder_Table $rTable
+	 * @param pQL_Query_Builder_Table $rTable
 	 * @param string $fieldName
-	 * @return pQL_Select_Builder_Field
+	 * @return pQL_Query_Builder_Field
 	 */
-	function registerField(pQL_Select_Builder_Table $rTable, $fieldName) {
-		if (isset($this->registeredFields[$rTable->getName()][$fieldName])) {
-			$rField = $this->registeredFields[$rTable->getName()][$fieldName];
+	function registerField(pQL_Query_Builder_Table $bTable, $fieldName) {
+		if (isset($this->registeredFields[$bTable->getName()][$fieldName])) {
+			$bField = $this->registeredFields[$bTable->getName()][$fieldName];
 		}
 		else {
-			$rField = $this->registeredFields[$rTable->getName()][$fieldName] = new pQL_Select_Builder_Field($rTable, $fieldName);
+			$bField = $this->registeredFields[$bTable->getName()][$fieldName] = new pQL_Query_Builder_Field($bTable, $fieldName);
 		}
-		return $rField;
+		return $bField;
 	}
 
 
@@ -44,12 +44,12 @@ final class pQL_Select_Builder {
 
 	/**
 	 * Возращает номер таблицы в запросе
-	 * @param pQL_Select_Builder_Table $table
+	 * @param pQL_Query_Builder_Table $table
 	 * @return int
 	 */
-	private function getTableNum(pQL_Select_Builder_Table $rTable) {
-		$index = array_search($rTable, $this->tables);
-		if (false === $index) $index = array_push($this->tables, $rTable) - 1;
+	private function getTableNum(pQL_Query_Builder_Table $bTable) {
+		$index = array_search($bTable, $this->tables);
+		if (false === $index) $index = array_push($this->tables, $bTable) - 1;
 		return $index;
 	}
 
@@ -57,13 +57,13 @@ final class pQL_Select_Builder {
 	private $fields = array();
 	/**
 	 * Возращает номер поля в запросе
-	 * @param pQL_Select_Builder_Table $rTable
-	 * @param pQL_Select_Builder_Field $rField
+	 * @param pQL_Query_Builder_Table $bTable
+	 * @param pQL_Query_Builder_Field $bField
 	 * @return int
 	 */
-	function getFieldNum(pQL_Select_Builder_Field $rField) {
-		$index = array_search($rField, $this->fields);
-		if (false === $index) $index = array_push($this->fields, $rField) - 1;
+	function getFieldNum(pQL_Query_Builder_Field $bField) {
+		$index = array_search($bField, $this->fields);
+		if (false === $index) $index = array_push($this->fields, $bField) - 1;
 		return $index;
 	}
 
@@ -82,13 +82,13 @@ final class pQL_Select_Builder {
 	}
 	
 	
-	private function getFieldAlias(pQL_Select_Builder_Field $rField) {
-		return 'f'.$this->getFieldNum($rField);
+	private function getFieldAlias(pQL_Query_Builder_Field $bField) {
+		return 'f'.$this->getFieldNum($bField);
 	}
 	
 	
-	function getTableAlias(pQL_Select_Builder_Table $rTable) {
-		return 't'.$this->getTableNum($rTable);
+	function getTableAlias(pQL_Query_Builder_Table $bTable) {
+		return 't'.$this->getTableNum($bTable);
 	}
 
 
@@ -111,9 +111,9 @@ final class pQL_Select_Builder {
 	function addWhere($expression) {
 		if ($this->where) $this->where .= ' AND ';
 		else $this->where .= ' WHERE ';
-		
+
 		$this->where .= $expression;
-		
+
 		return $this;
 	}
 

@@ -214,4 +214,14 @@ abstract class pQL_Driver {
 	function getIsNull($partSql) {
 		return "$partSql ISNULL";
 	}
+
+
+	function classToTable($className) {
+		return $this->getTranslator()->classToTable($className);
+	}
+
+
+	function propertyToField($property) {
+		return $this->getTranslator()->propertyToField($property);
+	}
 }

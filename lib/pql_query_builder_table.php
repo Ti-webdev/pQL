@@ -1,5 +1,5 @@
 <?php
-final class pQL_Select_Builder_Table {
+final class pQL_Query_Builder_Table {
 	private $name;
 
 
