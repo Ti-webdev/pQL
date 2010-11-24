@@ -30,6 +30,15 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 
 	/**
+	 * @var pQL_Query_Iterator
+	 */
+	private $iterator;
+	
+	
+	private $select;
+
+
+	/**
 	 * При изменении параметров запроса необходимо
 	 * очищать результат предыдущей выборки
 	 */
@@ -161,22 +170,31 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function in($val) {
 		$this->assertPropertyDefined();
 
-		$expression = $this->getWhereField();
+		$field = $this->getWhereField();
 
-		$expression .= ' IN (';
+		$orNull = false;
+		$expression .= $field.' IN (';
 		$first = true;
 		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator(func_get_args()));
 		foreach($vals as $val) {
-			if (is_null($val)) $this->isNull();
-			if ($first) $first = false;
-			else $expression .= ',';
-			$this->driver->quote($val);
+			if (is_null($val)) {
+				$orNull = true;
+			}
+			else {
+				if ($first) $first = false;
+				else $expression .= ',';
+				$this->driver->quote($val);
+			}
 		}
-		if (!$first) {
-			$expression .= ')';
+		$expression .= ')';
+
+		if ($first) {
+			if ($orNull) $expression = '('.$expression.' OR '.$this->driver->getIsNull($field).')';
 			$this->builder->addWhere($expression);
+		} elseif ($orNull) {
+			$this->isNull();
 		}
-		
+
 		return $this;
 	}
 	
