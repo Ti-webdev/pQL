@@ -47,29 +47,29 @@ foreach(db()->user->id->key()->name as $id=>$name) {
 	echo "$id: $name\n";
 }
 
-// done
-
-// custom select query
+// TODO: custom select query
 $list =   db()->user->login->in('guset', 'anonimous')
 		->db()->phoneNumber->number->like('%678%');
 foreach($list as $foundUser) {
 	echo "$foundUser<br />";
 }
 
-// жадная выборка: привязка переменной
+// TODO: жадная выборка: привязка переменной
 foreach(db()->user->phoneNumber->bind($phone) as $user) {
 	echo "$user->name: $phone->number <br />";
 }
 
 
-// жадная выборка: коллекция
-// чероновик!
+// TODO: жадная выборка: коллекция
+// ЧЕРОНОВИК!
 foreach(db()->user->phoneNumber->add() as $collection) {
 	echo "{$collection->user->name}: {$collection->phone->number}<br />";
 }
 
 // цепочки условий к одному полю:
 db()->table->field->not(null)->between(10, 25)->in($vals);
+
+# DONE
 
 // SQL: ... WHERE field = value
 db()->table->field->in($value);

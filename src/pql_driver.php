@@ -126,6 +126,11 @@ abstract class pQL_Driver {
 	function getIsNull($partSql) {
 		return "$partSql ISNULL";
 	}
+	
+	
+	function getBetween($expr, $min, $max) {
+		return "$expr BETWEEN $min AND $max";
+	}
 
 
 	final function classToTable($className) {

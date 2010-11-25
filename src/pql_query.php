@@ -94,6 +94,21 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 		return $this;
 	}
+	
+	
+	function between($min, $max) {
+		$field = $this->getWhereField();
+		$qMin = $this->driver->getParam($min);
+		$qMax = $this->driver->getParam($max);
+		$expression = $this->driver->getBetween($field, $qMin, $qMax);
+		$this->builder->addWhere($expression);
+		return $this;
+	}
+
+
+	function toArray() {
+		return iterator_to_array($this->getIterator());
+	}
 
 
 	/**

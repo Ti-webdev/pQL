@@ -255,4 +255,21 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$actual = array();
 		$this->assertEquals(array('two', null), iterator_to_array($q->val->in('bugaaa', 'two', null, 5)));
 	}
+	
+	
+	function testBetween() {
+		$this->exec("CREATE TABLE pql_test(val INT)");
+		for($i = -10; $i<=10; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES('".$i."')");
+		}
+		$this->exec("INSERT INTO pql_test VALUES(NULL)");
+
+		$this->assertEquals(array(1, 2), $this->pql()->test->val->value()->between(1,2)->toArray());
+		$this->assertEquals(array(-1, 0, 1, 2), $this->pql()->test->val->value()->between(-1,2)->toArray());
+		$this->assertEquals(array(-10, -9), $this->pql()->test->val->value()->between(-PHP_INT_MAX, -9)->toArray());
+		$this->assertEquals(array(8, 9, 10), $this->pql()->test->val->value()->between(8, PHP_INT_MAX)->toArray());
+		$this->assertEquals(array(), $this->pql()->test->val->value()->between(11, 12)->toArray());
+		$this->assertEquals(array(0), $this->pql()->test->val->value()->between(0, 0)->toArray());
+		$this->assertEquals(array(), $this->pql()->test->val->value()->between(2, 1)->toArray());
+	}
 }
