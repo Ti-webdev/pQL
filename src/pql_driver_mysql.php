@@ -131,9 +131,15 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	function getIsNull($partSql) {
-		return "ISNULL($partSql)";
+	function getIsNullExpr($partSql) {
+		return "$partSql IS NULL";
 	}
+	
+
+	function getNotNullExpr($expr) {
+		return "$expr IS NOT NULL";
+	}
+
 
 
 	final function getParam($val) {

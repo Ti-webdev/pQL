@@ -64,43 +64,62 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 
 	function in($val) {
-		$this->assertPropertyDefined();
 		$this->cleanResult();
+		$this->addArgsExpr(func_get_args(), 'IN', '=', 'OR', 'getIsNullExpr');
+		return $this;
+	}
 
+
+	function not($val) {
+		$this->cleanResult();
+		$this->addArgsExpr(func_get_args(), 'NOT IN', '<>', 'AND', 'getNotNullExpr');
+		return $this;
+	}
+	
+	
+	
+	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) { 
 		$field = $this->getWhereField();
 
 		$orNull = false;
-		$expression = $field.' IN (';
-		$first = true;
-		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator(func_get_args()));
+		$expression = null;
+		$i = 0;
+		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
 		foreach($vals as $val) {
 			if (is_null($val)) {
 				$orNull = true;
 			}
 			else {
-				if ($first) $first = false;
-				else $expression .= ',';
-				$expression .= $this->driver->getParam($val);
+				if (0 < $i) {
+					if (1 == $i) $expression = "$field $in($expression";
+					$expression .= ','.$this->driver->getParam($val);
+				}
+				else {
+					$expression = $this->driver->getParam($val);
+				}
+				$i++;
 			}
 		}
-		$expression .= ')';
+		
+		if (0 < $i) {
+			if (1 == $i) $expression = "$field $equals $expression";
+			else $expression .= ')';
 
-		if ($first) {
-			if ($orNull) $this->isNull();
-		} else {
-			if ($orNull) $expression = '('.$expression.' OR '.$this->driver->getIsNull($field).')';
+			if ($orNull) $expression = "($expression $operator ".$this->driver->getIsNullExpr($field).')';
+			$this->builder->addWhere($expression);
+		} elseif ($orNull) {
+			$expression = $this->driver->$nullFn($field);
 			$this->builder->addWhere($expression);
 		}
-
-		return $this;
 	}
 	
 	
 	function between($min, $max) {
+		$this->cleanResult();
 		$field = $this->getWhereField();
 		$qMin = $this->driver->getParam($min);
 		$qMax = $this->driver->getParam($max);
-		$expression = $this->driver->getBetween($field, $qMin, $qMax);
+		$expression = $this->driver->getBetweenExpr($field, $qMin, $qMax);
 		$this->builder->addWhere($expression);
 		return $this;
 	}
@@ -201,16 +220,10 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->assertClassDefined();
 		if (!$this->field) throw new pQL_Exception('Select property first!');
 	}
-	
-	
-	private function isNull() {
-		$field = $this->getWhereField();
-		$expression = $this->driver->getIsNull($field);
-		$this->builder->addWhere($expression);
-	}
 
 
 	private function getWhereField() {
+		$this->assertPropertyDefined();
 		$result = $this->builder->getTableAlias($this->table);
 		$result .= '.';
 		$result .= $this->field->getName();

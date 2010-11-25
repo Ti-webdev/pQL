@@ -52,7 +52,12 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	}
 
 
-	function getIsNull($partSql) {
-		return "ISNULL($partSql)";
+	function getIsNullExpr($partSql) {
+		return "$partSql IS NULL";
+	}
+	
+
+	function getNotNullExpr($expr) {
+		return "$expr IS NOT NULL";
 	}
 }

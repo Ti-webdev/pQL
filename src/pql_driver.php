@@ -123,12 +123,17 @@ abstract class pQL_Driver {
 	abstract function getParam($val);
 
 
-	function getIsNull($partSql) {
-		return "$partSql ISNULL";
+	function getIsNullExpr($expr) {
+		return "$expr ISNULL";
+	}
+
+
+	function getNotNullExpr($expr) {
+		return "$expr NOTNULL";
 	}
 	
 	
-	function getBetween($expr, $min, $max) {
+	function getBetweenExpr($expr, $min, $max) {
 		return "$expr BETWEEN $min AND $max";
 	}
 

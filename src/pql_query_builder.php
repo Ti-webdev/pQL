@@ -75,8 +75,8 @@ final class pQL_Query_Builder {
 			$result .= $this->getTableAlias($rField->getTable());
 			$result .= '.';
 			$result .= $rField->getName();
-			$result .= ' AS ';
-			$result .= $this->getFieldAlias($rField);
+			#$result .= ' AS ';
+			#$result .= $this->getFieldAlias($rField);
 		}
 		return $result;
 	}

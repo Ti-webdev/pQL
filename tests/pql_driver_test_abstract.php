@@ -272,4 +272,23 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(array(0), $this->pql()->test->val->value()->between(0, 0)->toArray());
 		$this->assertEquals(array(), $this->pql()->test->val->value()->between(2, 1)->toArray());
 	}
+
+
+	function testNot() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+
+		$vals = array('one', 'two', 'three', null, "'quoted string\"");
+		foreach($vals as $val) {
+			$this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
+		}
+
+		$q = $this->pql()->test->val->value()->not('two');
+		$this->assertEquals(array('one', 'three', "'quoted string\""), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->not(null);
+		$this->assertEquals(array('one', 'two', 'three', "'quoted string\""), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->not('three', 'one');
+		$this->assertEquals(array('two', "'quoted string\""), $q->toArray(), "SQL: $q");
+	}
 }
