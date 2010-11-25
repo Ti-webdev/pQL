@@ -265,9 +265,9 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("INSERT INTO pql_test VALUES(NULL)");
 
 		$this->assertEquals(array(1, 2), $this->pql()->test->val->value()->between(1,2)->toArray());
-		$this->assertEquals(array(-1, 0, 1, 2), $this->pql()->test->val->value()->between(-1,2)->toArray());
+		$this->assertEquals(range(-1, 2), $this->pql()->test->val->value()->between(-1,2)->toArray());
 		$this->assertEquals(array(-10, -9), $this->pql()->test->val->value()->between(-PHP_INT_MAX, -9)->toArray());
-		$this->assertEquals(array(8, 9, 10), $this->pql()->test->val->value()->between(8, PHP_INT_MAX)->toArray());
+		$this->assertEquals(range(8, 10), $this->pql()->test->val->value()->between(8, PHP_INT_MAX)->toArray());
 		$this->assertEquals(array(), $this->pql()->test->val->value()->between(11, 12)->toArray());
 		$this->assertEquals(array(0), $this->pql()->test->val->value()->between(0, 0)->toArray());
 		$this->assertEquals(array(), $this->pql()->test->val->value()->between(2, 1)->toArray());
@@ -290,5 +290,18 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$q = $this->pql()->test->val->value()->not('three', 'one');
 		$this->assertEquals(array('two', "'quoted string\""), $q->toArray(), "SQL: $q");
+	}
+	
+	
+	function testLimit() {
+		$this->exec("CREATE TABLE pql_test(val INT)");
+		for($i = 0; $i<=10; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES('".$i."')");
+		}
+		$this->exec("INSERT INTO pql_test VALUES(NULL)");
+
+		$q = $this->pql()->test->val->value();
+		$this->assertEquals(array(0, 1, 2, 3, 4), $q->limit(5)->toArray());
+		$this->assertEquals(range(0, 9), $q->limit(10)->toArray());
 	}
 }

@@ -116,13 +116,21 @@ final class pQL_Query_Builder {
 
 		return $this;
 	}
+	
+	
+	private $limit;
+	function setLimit($limit) {
+		$this->limit = (int) $limit;
+	}
 
 
 	/**
 	 * Возращает часть запроса, начиная с FROM
 	 */
 	function getSQLSuffix() {
-		return $this->getSQLFrom().$this->where;
+		$result = $this->getSQLFrom().$this->where;
+		if ($this->limit) $result .= " LIMIT $this->limit";
+		return $result;
 	}
 
 

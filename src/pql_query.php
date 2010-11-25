@@ -125,6 +125,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	}
 
 
+	function limit($limit = null) {
+		$this->cleanResult();
+		$this->builder->setLimit($limit);
+		return $this;
+	}
+
+
 	function toArray() {
 		return iterator_to_array($this->getIterator());
 	}
