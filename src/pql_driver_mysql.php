@@ -56,7 +56,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	protected function getTableFields($table) {
+	function getTableFields($table) {
 		$result = array();
 		$Q = $this->query("SHOW COLUMNS FROM $table");
 		while($column = mysql_fetch_row($Q)) $result[] = reset($column);
@@ -115,34 +115,19 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	function getSelectHandle(pQL_Select_Builder $builder) {
+	function getQueryHandler(pQL_Query_Builder $builder) {
 		return $this->query($builder->getSQL());
 	}
 
 
-	/**
-	 * пересоздавать запрос не надо - будем перематывать
-	 * @see pQL_Driver::needRecreateSelectHandle()
-	 * @see pQL_Driver_MySQL::getSelectIterator()
-	 */
-	protected function needRecreateSelectHandle(pQL_Query_Mediator $queryMediator) {
-		return false;
-	}
-
-
-	protected function getSelectIterator(pQL_Query_Mediator $queryMediator) {
-		$handle = $queryMediator->getSelectHandle($this);
-
-		// перематываем запрос на начало
-		if ($queryMediator->getIsDone()) mysql_data_seek($handle, 0);
-		else $queryMediator->setIsDone();
-
+	function getQueryIterator(pQL_Query_Mediator $mediator) {
+		$handle = $mediator->getQueryHandler($this);
 		return new pQL_Driver_MySQL_Iterator($handle);
 	}
 
 
 	function getCount(pQL_Query_Mediator $mediator) {
-		return mysql_num_rows($mediator->getSelectHandle($this));
+		return count($this->getQueryIterator($mediator));
 	}
 
 
@@ -153,5 +138,10 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	final function getParam($val) {
 		return $this->quote($val);
+	}
+	
+	
+	function isSupportRewindQuery() {
+		return true;
 	}
 }

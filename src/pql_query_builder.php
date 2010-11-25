@@ -95,7 +95,7 @@ final class pQL_Query_Builder {
 	private function getSQLFrom() {
 		// if empty from - add first table!
 		if (empty($this->tables)) $this->getTableNum(reset($this->registeredTables));
-		
+
 		$result = '';
 		foreach($this->tables as $tableNum=>$rTable) {
 			if ($tableNum) $result .= ', ';

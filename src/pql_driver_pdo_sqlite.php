@@ -33,16 +33,15 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	}
 
 
-	protected function getTableFields($table) {
+	function getTableFields($table) {
 		$q = $this->getDbh()->query("PRAGMA table_info($table)");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
 		return $q;
 	}
 
 
-
 	function getCount(pQL_Query_Mediator $mediator) {
-		$sql = 'SELECT COUNT(*) '.$mediator->getSelectBuilder($this)->getSQLSuffix();
+		$sql = 'SELECT COUNT(*) '.$mediator->getBuilder()->getSQLSuffix();
 		return $this->getDbh()->query($sql)->fetchColumn(0);
 	}
 }

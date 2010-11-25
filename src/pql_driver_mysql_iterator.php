@@ -1,5 +1,5 @@
 <?php
-class pQL_Driver_MySQL_Iterator implements SeekableIterator {
+class pQL_Driver_MySQL_Iterator implements SeekableIterator, Countable {
 	private $query;
 	private $current;
 	private $key;
@@ -32,6 +32,9 @@ class pQL_Driver_MySQL_Iterator implements SeekableIterator {
 
 
 	function rewind() {
+		// перематываем на начало
+		if (!is_null($this->key)) mysql_data_seek($this->query, 0);
+
 		$this->key = -1;
 		$this->next();
 	}
@@ -39,5 +42,10 @@ class pQL_Driver_MySQL_Iterator implements SeekableIterator {
 
 	function seek($position) {
 		mysql_data_seek($this->query, $position);
+	}
+
+
+	function count() {
+		return mysql_num_rows($this->query);
 	}
 }

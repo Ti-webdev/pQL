@@ -12,23 +12,35 @@ final class pQL_Query_Iterator implements Iterator {
 	}
 	
 	
+	/**
+	 * Номер поля выборки, используемое в качестве ключей итератора
+	 * @var int
+	 */
 	private $keyIndex;
 	function setKeyIndex($index) {
 		$this->keyIndex = $index;
 	}
 	
-	
+
+	/**
+	 * Номер поля в выборке, используемое в качестве значений итератора
+	 * @var int
+	 */
 	private $valueIndex;
 	function setValueIndex($index) {
 		$this->valueIndex = $index;
+		$this->valueClass = null;
 	}
-	
-	
+
+
+	/**
+	 * Класс используемый в качестве значений итератора
+	 * @var pQL_Query_Iterator_Class
+	 */
 	private $valueClass;
-	private $valueClassIndexes;
 	function setValueClass($className, $keys) {
-		$this->valueClass = $className;
-		$this->valueClassIndexes = $keys;
+		$this->valueClass = new pQL_Query_Iterator_Class($className, $keys);
+		$this->valueIndex = null;
 	}
 
 
@@ -36,8 +48,8 @@ final class pQL_Query_Iterator implements Iterator {
 		$current = $this->iterator->current();
 		if (is_null($this->valueIndex)) {
 			$properties = array();
-			foreach($this->valueClassIndexes as $i=>$name) $properties[$name] = $current[$i];
-			return $this->driver->getObject($this->valueClass, $properties);
+			foreach($this->valueClass->getIndexes() as $i=>$name) $properties[$name] = $current[$i];
+			return $this->driver->getObject($this->valueClass->getName(), $properties);
 		}
 		else {
 			return $current[$this->valueIndex];

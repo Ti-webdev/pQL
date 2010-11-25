@@ -25,4 +25,3 @@ class pQL_Tests_Sute extends PHPUnit_Framework_TestSuite {
 		return new self;
 	}
 }
-

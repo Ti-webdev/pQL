@@ -153,7 +153,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function testCountable() {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
 		$this->assertEquals(0, count($this->pql()->test));
-		
+
 		$this->exec("INSERT INTO pql_test VALUES('".md5(microtime(true))."')");
 		$this->assertEquals(1, count($this->pql()->test));
 		
@@ -209,10 +209,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			$i = array_search($v->val, $valsCopy);
 			unset($valsCopy[$i]);
 		}
-		if ($valsCopy) $this->fail('valsCopy assert empty!');
+		if ($valsCopy) $this->fail('valsCopy not empty!');
 	}
-	
-	
+
+
 	function testIn() {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
 		
@@ -243,13 +243,13 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 
 		// count
-		$q = $this->pql->val;
+		$q = $this->pql()->test->val;
 		$this->assertEquals(5, count($q));
 		$q->in('two', 'three'); // modify
 		$this->assertEquals(2, count($q));
 		
 		// fetch
-		$q = $this->pql->val->value();
+		$q = $this->pql()->test->val->value();
 		foreach($q as $i=>$val) $this->assertEquals($vals[$i], $val);
 		
 		$actual = array();

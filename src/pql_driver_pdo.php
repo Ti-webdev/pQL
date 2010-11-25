@@ -33,8 +33,8 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		foreach($sth->fetch() as $field=>$value) $properties[$tr->fieldToProperty($field)] = $value;
 		return $this->getObject($class, $properties);
 	}
-	
-	
+
+
 	final protected function updateByPk($table, $fields, $values, $pkValue) {
 		$pk = $this->getTablePrimaryKey($table);
 		$sth = $this->getDbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");
@@ -56,15 +56,15 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		}
 		return $this->getDbh()->lastInsertId();
 	}
-
-
-	function getSelectHandle(pQL_Select_Builder $builder) {
+	
+	
+	final function getQueryHandler(pQL_Query_Builder $builder) {
 		return $this->getDbh()->query($builder->getSQL());
 	}
 
 
-	protected function getSelectIterator(pQL_Query_Mediator $queryMediator) {
-		$sth = $queryMediator->getSelectHandle($this);
+	final function getQueryIterator(pQL_Query_Mediator $mediator) {
+		$sth = $mediator->getQueryHandler($this);
 		$sth->setFetchMode(PDO::FETCH_NUM);
 		return new IteratorIterator($sth);
 	}
@@ -72,5 +72,10 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 
 	final function getParam($val) {
 		return $this->getDbh()->quote($val);
+	}
+
+
+	final function isSupportRewindQuery() {
+		return false;
 	}
 }
