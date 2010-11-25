@@ -59,7 +59,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	
 	
 	final function getQueryHandler(pQL_Query_Builder $builder) {
-		return $this->getDbh()->query($builder->getSQL());
+		return $this->getDbh()->query($builder->getSQL($this));
 	}
 
 

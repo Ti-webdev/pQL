@@ -116,7 +116,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 
 	function getQueryHandler(pQL_Query_Builder $builder) {
-		return $this->query($builder->getSQL());
+		return $this->query($builder->getSQL($this));
 	}
 
 

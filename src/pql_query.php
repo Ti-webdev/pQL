@@ -130,6 +130,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->builder->setLimit($limit);
 		return $this;
 	}
+	
+	
+	function offset($offset = null) {
+		$this->cleanResult();
+		$this->builder->setOffset($offset);
+		return $this;
+	}
 
 
 	function toArray() {
@@ -155,7 +162,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	function __toString() {
 		$this->mediator->setup($this->driver);
-		return (string) $this->builder->getSQL();
+		return (string) $this->builder->getSQL($this->driver);
 	}
 
 

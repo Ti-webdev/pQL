@@ -118,24 +118,33 @@ final class pQL_Query_Builder {
 	}
 	
 	
-	private $limit;
+	private $limit = 0;
 	function setLimit($limit) {
 		$this->limit = (int) $limit;
+	}
+	
+
+	private $offset = 0;
+	function setOffset($offset) {
+		$this->offset = (int) $offset;
+	}
+	
+	
+	private function getLimitExpr(pQL_Driver $driver) {
+		return rtrim(' '.$driver->getLimitExpr($this->offset, $this->limit));
 	}
 
 
 	/**
 	 * Возращает часть запроса, начиная с FROM
 	 */
-	function getSQLSuffix() {
-		$result = $this->getSQLFrom().$this->where;
-		if ($this->limit) $result .= " LIMIT $this->limit";
-		return $result;
+	function getSQLSuffix(pQL_Driver $driver) {
+		return $this->getSQLFrom().$this->where.$this->getLimitExpr($driver);
 	}
 
 
-	function getSQL() {
-		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix();
+	function getSQL(pQL_Driver $driver) {
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver);
 		return $sql;
 	}
 }

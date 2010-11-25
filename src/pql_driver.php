@@ -136,6 +136,19 @@ abstract class pQL_Driver {
 	function getBetweenExpr($expr, $min, $max) {
 		return "$expr BETWEEN $min AND $max";
 	}
+	
+	
+	function getLimitExpr($offset, $limit) {
+		$result = '';
+		if ($offset) {
+			$result .= " LIMIT $offset, ";
+			$result .= $limit ? $limit : PHP_INT_MAX;
+		}
+		elseif ($limit) {
+			$result .= " LIMIT $limit";
+		}
+		return $result;
+	}
 
 
 	final function classToTable($className) {
