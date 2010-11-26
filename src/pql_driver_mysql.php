@@ -16,10 +16,10 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		$translator->setDbQuote('`');
 		return parent::setTranslator($translator);
 	}
-	
-	
+
+
 	private function query($query) {
-		$result = mysql_query($query, $this->db);
+		$result = is_null($this->db) ? mysql_query($query) : mysql_query($query, $this->db);
 		if (!$result) throw new pQL_Driver_MySQL_Exception(mysql_error(), mysql_errno(), $query);
 		return $result;
 	}
@@ -66,6 +66,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	
 	private function quote($value) {
 		if (is_null($value)) return 'NULL';
+		if (is_null($this->db)) return '"'.mysql_real_escape_string($value).'"';
 		return '"'.mysql_real_escape_string($value, $this->db).'"';
 	}
 
@@ -110,7 +111,8 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		$sql .= ")";
 		
 		$this->query($sql);
-			
+
+		if (is_null($this->db)) return mysql_insert_id();
 		return mysql_insert_id($this->db);
 	}
 
