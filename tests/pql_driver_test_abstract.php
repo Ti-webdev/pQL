@@ -354,8 +354,17 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		for($i = -10; $i<=10; $i++) {
 			$this->exec("INSERT INTO pql_test VALUES($i)");
 		}
-		$qPrototype = $this->pql()->test->val->value();
-		$q = $qPrototype->clone();
-		$this->assertEquals(range(20, 0), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->lt(6);
+		$this->assertEquals(range(-10, 5), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->lte(6);
+		$this->assertEquals(range(-10, 6), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->gt(-1);
+		$this->assertEquals(range(0, 10), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->value()->gte(-1);
+		$this->assertEquals(range(-1, 10), $q->toArray(), "SQL: $q");
 	}
 }
