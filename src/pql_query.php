@@ -73,9 +73,8 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->addArgsExpr(func_get_args(), 'NOT IN', '<>', 'AND', 'getNotNullExpr');
 		return $this;
 	}
-	
-	
-	
+
+
 	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) {
 		$field = $this->getField(); 
 		$this->cleanResult();
@@ -144,6 +143,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	function gte($value) {
 		$this->addWhereSymbol('>=', $value);
+		return $this;
+	}
+	
+	
+	function like($expr) {
+		$this->addWhereSymbol('LIKE', $expr);
 		return $this;
 	}
 

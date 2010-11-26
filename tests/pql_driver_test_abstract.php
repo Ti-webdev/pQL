@@ -278,9 +278,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
 
 		$vals = array('one', 'two', 'three', null, "'quoted string\"");
-		foreach($vals as $val) {
-			$this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
-		}
+		foreach($vals as $val) $this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
 
 		$q = $this->pql()->test->val->value()->not('two');
 		$this->assertEquals(array('one', 'three', "'quoted string\""), $q->toArray(), "SQL: $q");
@@ -367,4 +365,39 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$q = $this->pql()->test->val->value()->gte(-1);
 		$this->assertEquals(range(-1, 10), $q->toArray(), "SQL: $q");
 	}
+
+
+	function testLike() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+
+		$vals = array('one', 'two', 'three', null);
+		foreach($vals as $val) $this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
+
+		$q = $this->pql()->test->val->like('%o%')->value();
+		$this->assertEquals(array('one', 'two'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('%o')->value();
+		$this->assertEquals(array('two'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('o%')->value();
+		$this->assertEquals(array('one'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('o')->value();
+		$this->assertEquals(array(), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('%e')->value();
+		$this->assertEquals(array('one', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('%ee')->value();
+		$this->assertEquals(array('three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('%waka%')->value();
+		$this->assertEquals(array(), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('t')->value();
+		$this->assertEquals(array(), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->like('t%')->value();
+		$this->assertEquals(array('two', 'three'), $q->toArray(), "SQL: $q");
+	} 
 }
