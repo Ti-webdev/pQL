@@ -290,6 +290,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$q = $this->pql()->test->val->value()->not('three', 'one');
 		$this->assertEquals(array('two', "'quoted string\""), $q->toArray(), "SQL: $q");
+		
+		// as array
+		$q = $this->pql()->test->val->value()->not(array('three', 'one'));
+		$this->assertEquals(array('two', "'quoted string\""), $q->toArray(), "SQL: $q");
 	}
 	
 	
@@ -327,5 +331,31 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(range(0, 20), $this->pql()->test->negative->desc()->val->desc()->val->toArray());
 		$this->exec("UPDATE pql_test SET negative = 50");
 		$this->assertEquals(range(20, 0), $this->pql()->test->negative->desc()->val->desc()->value()->toArray());
+	}
+	
+	
+	function testCloneQuery() {
+		$this->exec("CREATE TABLE pql_test(val INT)");
+		for($i = -10; $i<=10; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES($i)");
+		}
+		$q = $this->pql()->test->val->value()->not(0);
+		$this->assertEquals(array_merge(range(-10, -1), range(1, 10)), $q->toArray());
+		
+		$qClone = clone $q;
+		$this->assertEquals(array_merge(range(-10, -1), range(1, 10)), $qClone->toArray());
+		$this->assertEquals(range(3, 10), $qClone->not(range(-10, 2))->toArray());
+		$this->assertEquals(array_merge(range(-10, -1), range(1, 10)), $q->toArray());
+	}
+
+
+	function testLessAndGreater() {
+		$this->exec("CREATE TABLE pql_test(val INT)");
+		for($i = -10; $i<=10; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES($i)");
+		}
+		$qPrototype = $this->pql()->test->val->value();
+		$q = $qPrototype->clone();
+		$this->assertEquals(range(20, 0), $q->toArray(), "SQL: $q");
 	}
 }

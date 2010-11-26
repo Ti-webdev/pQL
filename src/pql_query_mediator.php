@@ -11,6 +11,11 @@ final class pQL_Query_Mediator {
 	function __construct(pQL_Query_Builder $builder) {
 		$this->builder = $builder;
 	}
+	
+	
+	function __clone() {
+		$this->builder = clone $this->builder;
+	}
 
 
 	private $firstTable;

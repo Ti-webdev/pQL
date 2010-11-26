@@ -64,22 +64,21 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 
 	function in($val) {
-		$this->cleanResult();
 		$this->addArgsExpr(func_get_args(), 'IN', '=', 'OR', 'getIsNullExpr');
 		return $this;
 	}
 
 
 	function not($val) {
-		$this->cleanResult();
 		$this->addArgsExpr(func_get_args(), 'NOT IN', '<>', 'AND', 'getNotNullExpr');
 		return $this;
 	}
 	
 	
 	
-	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) { 
-		$field = $this->getField();
+	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) {
+		$field = $this->getField(); 
+		$this->cleanResult();
 
 		$orNull = false;
 		$expression = null;
@@ -121,6 +120,30 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$qMax = $this->driver->getParam($max);
 		$expression = $this->driver->getBetweenExpr($field, $qMin, $qMax);
 		$this->builder->addWhere($expression);
+		return $this;
+	}
+	
+	
+	function lt($value) {
+		$this->addWhereSymbol('<', $value);
+		return $this;
+	}
+	
+	
+	function lte($value) {
+		$this->addWhereSymbol('<=', $value);
+		return $this;
+	}
+	
+	
+	function gt($value) {
+		$this->addWhereSymbol('>', $value);
+		return $this;
+	}
+	
+	
+	function gte($value) {
+		$this->addWhereSymbol('>=', $value);
 		return $this;
 	}
 
@@ -172,11 +195,18 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->assertClassDefined();
 		return $this->mediator->getCount($this->driver);
 	}
-	
-	
+
+
 	function __toString() {
 		$this->mediator->setup($this->driver);
 		return (string) $this->builder->getSQL($this->driver);
+	}
+	
+	
+	function __clone() {
+		$this->mediator = clone $this->mediator;
+		$this->builder = $this->mediator->getBuilder();
+		#$this->cleanResult();
 	}
 
 
@@ -256,5 +286,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$result .= '.';
 		$result .= $this->field->getName();
 		return $result;
+	}
+	
+	
+	private function addWhereSymbol($symbol, $value) {
+		$this->cleanResult();
+		$field = $this->getField();
+		$qValue = $this->driver->getParam($value);
+		$this->builder->addWhere("$field $symbol $qValue");
 	}
 }
