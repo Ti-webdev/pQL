@@ -17,7 +17,7 @@ final class pQL {
 	}
 
 
-	static function MySQL($resource) {
+	static function MySQL($resource = null) {
 		return new self(pQL_Driver::Factory('MySQL', $resource));
 	}
 

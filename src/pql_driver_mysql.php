@@ -6,12 +6,12 @@
  */
 final class pQL_Driver_MySQL extends pQL_Driver {
 	private $db;
-	function __construct($db) {
-		if (!is_resource($db)) throw new InvalidArgumentException('Invalid db connection');
+	function __construct($db = null) {
+		if (!is_resource($db) and !is_null($db)) throw new InvalidArgumentException('Invalid db connection');
 		$this->db = $db;
 	}
-	
-	
+
+
 	function setTranslator(pQL_Translator $translator) {
 		$translator->setDbQuote('`');
 		return parent::setTranslator($translator);
