@@ -151,6 +151,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->addWhereSymbol('LIKE', $expr);
 		return $this;
 	}
+	
+	
+	function notLike($expr) {
+		$this->addWhereSymbol('NOT LIKE', $expr);
+		return $this;
+	}
 
 
 	function limit($limit = null) {

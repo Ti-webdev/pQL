@@ -399,5 +399,40 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$q = $this->pql()->test->val->like('t%')->value();
 		$this->assertEquals(array('two', 'three'), $q->toArray(), "SQL: $q");
-	} 
+	}
+	
+	
+	function testNotLike() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+
+		$vals = array('one', 'two', 'three', null);
+		foreach($vals as $val) $this->exec("INSERT INTO pql_test VALUES(".$this->quote($val).")");
+
+		$q = $this->pql()->test->val->notLike('%o%')->value();
+		$this->assertEquals(array('three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('%o')->value();
+		$this->assertEquals(array('one', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('o%')->value();
+		$this->assertEquals(array('two', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('o')->value();
+		$this->assertEquals(array('one', 'two', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('%e')->value();
+		$this->assertEquals(array('two'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('%ee')->value();
+		$this->assertEquals(array('one', 'two'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('%waka%')->value();
+		$this->assertEquals(array('one', 'two', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('t')->value();
+		$this->assertEquals(array('one', 'two', 'three'), $q->toArray(), "SQL: $q");
+
+		$q = $this->pql()->test->val->notLike('t%')->value();
+		$this->assertEquals(array('one'), $q->toArray(), "SQL: $q");
+	}
 }
