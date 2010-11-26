@@ -12,7 +12,7 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 
 
 	function getToStringField($class) {
-		$table = $this->getTranslator()->classToTable($class);
+		$table = $this->classToTable($class);
 		$result = null;
 		foreach($this->getDbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
 			$isString = preg_match('#^(text|char|varchar)#', $column['Type']);
@@ -21,7 +21,7 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 				if ($isString) break;
 			}
 		}
-		if ($result) return $this->getTranslator()->fieldToProperty($result);
+		if ($result) return $this->fieldToProperty($result);
 		return $result;
 	}
 

@@ -1,7 +1,8 @@
 <?php
 abstract class pQL_Object {
-	function __construct($properties) {
+	function __construct(pQL $pQL, $properties) {
 		$this->properties = $properties;
+		$this->pQL = $pQL;
 	}
 	
 	
@@ -11,7 +12,7 @@ abstract class pQL_Object {
 	
 	
 	protected function getToStringField() {
-		return $this->getPQL()->driver()->getToStringField($this->getClass());
+		return $this->getDriver()->getToStringField($this->getClass());
 	}
 
 
@@ -24,13 +25,15 @@ abstract class pQL_Object {
 
 
 	private $pQL;
-	final function setPQL(pQL $pQL) {
-		$this->pQL = $pQL;
-	}
 
 
 	final protected function getPQL() {
 		return $this->pQL;
+	}
+	
+	
+	final protected function getDriver() { 
+		return $this->getPQL()->driver();
 	}
 
 

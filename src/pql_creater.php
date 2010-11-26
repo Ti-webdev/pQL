@@ -20,9 +20,7 @@ final class pQL_Creater {
 		}
 
 		// new object
-		$object = $this->pQL->driver()->getObject($class);
-		$object->setPQL($this->pQL);
-		return $object;
+		return $this->pQL->driver()->getObject($class);
 	}
 
 

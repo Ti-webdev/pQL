@@ -190,6 +190,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function toArray() {
 		return iterator_to_array($this->getIterator());
 	}
+	
+	
+	function one() {
+		$q = clone $this;
+		foreach($q->limit(1) as $result) return $result;
+		return null;
+	}
 
 
 	/**

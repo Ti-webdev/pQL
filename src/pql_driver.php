@@ -31,6 +31,12 @@ abstract class pQL_Driver {
 	function setTranslator(pQL_Translator $translator) {
 		$this->translator = $translator;
 	}
+	
+	
+	private $pQL;
+	final function setPql(pQL $pQL) {
+		$this->pQL = $pQL;
+	}
 
 
 	/**
@@ -95,7 +101,7 @@ abstract class pQL_Driver {
 
 
 	final function getObject($class, $properties = array()) {
-		return new pQL_Object_Simple($properties, $class);
+		return new pQL_Object_Simple($this->pQL, $properties, $class);
 	}
 
 

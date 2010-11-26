@@ -4,16 +4,16 @@
  * @author Ti
  */
 final class pQL_Object_Simple extends pQL_Object {
-	function __construct($properties, $class) {
+	function __construct(pQL $pQL, $properties, $class) {
 		$this->class = $class;
-		parent::__construct($properties);
+		parent::__construct($pQL, $properties);
 	}
 	
 	
 	function getClass() {
 		return $this->class;
 	}
-	
-	
+
+
 	private $class;
 }

@@ -26,6 +26,14 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	protected function pql() {
 		return $this->creater;
 	}
+	
+	
+	function testOne() {
+		$val = md5(microtime(true));
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
+		$this->exec("INSERT INTO pql_test VALUES('$val')");
+		$this->assertEquals($val, $this->pql()->test->one()->val);
+	}
 
 	
 	function testToString() {
@@ -33,8 +41,9 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
 		$obj = $this->pql()->test()->set('val', $val)->save();
 		$this->assertEquals($val, "$obj");
+		$this->assertEquals($val, $this->pql()->test->one()->__toString());
 	}
-	
+
 	
 	function testFieldIterator() {
 		$this->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");

@@ -28,6 +28,7 @@ final class pQL {
 		$this->translator = new pQL_Translator;
 		$this->driver = $driver;
 		$this->driver->setTranslator($this->translator);
+		$this->driver->setPql($this);
 	}
 
 
@@ -44,8 +45,8 @@ final class pQL {
 		if (!$this->creater) $this->creater = new pQL_Creater($this);
 		return $this->creater;
 	}
-	
-	
+
+
 	/**
 	 * Возращает используемый драйвер pQL
 	 */
