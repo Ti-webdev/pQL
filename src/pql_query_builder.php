@@ -130,13 +130,20 @@ final class pQL_Query_Builder {
 	}
 	
 	
+	private $orderBy = '';
+	function addOrder($expr) {
+		$this->orderBy .= $this->orderBy ? ', ' : ' ORDER BY ';
+		$this->orderBy .= $expr;
+	}
+	
+	
 	private function getLimitExpr(pQL_Driver $driver) {
 		return rtrim(' '.$driver->getLimitExpr($this->offset, $this->limit));
 	}
 
 
 	/**
-	 * Возращает часть запроса, начиная с FROM
+	 * Возращает часть запроса, начиная с FROM до ORDER BY
 	 */
 	function getSQLSuffix(pQL_Driver $driver) {
 		return $this->getSQLFrom().$this->where.$this->getLimitExpr($driver);
@@ -144,7 +151,7 @@ final class pQL_Query_Builder {
 
 
 	function getSQL(pQL_Driver $driver) {
-		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver);
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver).$this->orderBy;
 		return $sql;
 	}
 }

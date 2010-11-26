@@ -154,8 +154,8 @@ abstract class pQL_Driver {
 	final function classToTable($className) {
 		return $this->getTranslator()->classToTable($className);
 	}
-	
-	
+
+
 	final function tableToClass($tableName) {
 		return $this->getTranslator()->tableToClass($tableName);
 	}

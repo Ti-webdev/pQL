@@ -79,7 +79,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	
 	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) { 
-		$field = $this->getWhereField();
+		$field = $this->getField();
 
 		$orNull = false;
 		$expression = null;
@@ -116,7 +116,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	function between($min, $max) {
 		$this->cleanResult();
-		$field = $this->getWhereField();
+		$field = $this->getField();
 		$qMin = $this->driver->getParam($min);
 		$qMax = $this->driver->getParam($max);
 		$expression = $this->driver->getBetweenExpr($field, $qMin, $qMax);
@@ -135,6 +135,20 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function offset($offset = null) {
 		$this->cleanResult();
 		$this->builder->setOffset($offset);
+		return $this;
+	}
+
+
+	function ask() {
+		$this->cleanResult();
+		$this->builder->addOrder($this->getField());
+		return $this;
+	}
+	
+	
+	function desc() {
+		$this->cleanResult();
+		$this->builder->addOrder($this->getField().' DESC');
 		return $this;
 	}
 
@@ -236,7 +250,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	}
 
 
-	private function getWhereField() {
+	private function getField() {
 		$this->assertPropertyDefined();
 		$result = $this->builder->getTableAlias($this->table);
 		$result .= '.';
