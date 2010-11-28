@@ -67,37 +67,9 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->pql->tablePrefix('pql_');
 		$this->assertEquals($id, $this->pql()->test($id)->id);
 	}
-
-
-	function testCreate() {
-		$val = md5(microtime(true));
-		
-		$this->db->exec("CREATE TABLE pql_test(id INTEGER PRIMARY KEY, val TEXT)");
-		
-		$object = $this->pql()->test();
-		$this->assertTrue($object instanceof pQL_Object);
-		$this->assertTrue(empty($object->id));
-		$object->val = $val;
-		$object->save();
-
-		$id = $this->db->lastInsertId();
-		$this->assertEquals($val, $this->db->query("SELECT val FROM pql_test WHERE val = '$val'")->fetch(PDO::FETCH_OBJ)->val);
-		$this->assertEquals($id, $object->id);
-		$this->assertEquals($val, $this->pql()->test($id)->val);
-
-		// custom id field
-		$this->db->exec("DROP TABLE pql_test");
-		$this->db->exec("CREATE TABLE pql_test(val TEXT, my_int INTEGER PRIMARY KEY)");
-		$this->db->exec("INSERT INTO pql_test(val) VALUES('first')");
-		$val = md5(microtime(true));
-		$object = $this->pql()->test();
-		$object->val = $val;
-		$object->save();
-		$id = $this->db->lastInsertId();
-		$this->db->exec("INSERT INTO pql_test(val) VALUES('last')");
-
-		$this->assertEquals($val, $this->db->query("SELECT val FROM pql_test WHERE val = '$val'")->fetch(PDO::FETCH_OBJ)->val);
-		$this->assertEquals($id, $object->my_int);
-		$this->assertEquals($val, $this->pql()->test($id)->val);
+	
+	
+	protected function getPKExpr() {
+		return 'INTEGER PRIMARY KEY';
 	}
 }

@@ -7,7 +7,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	
 	abstract function setUpPql();
 	abstract function exec($sql);
+	abstract protected function queryValue($sql);
 	abstract function quote($val);
+	abstract protected function getPKExpr();
+	abstract protected function lastInsertId();
 	
 	
 	function setUp() {
@@ -443,5 +446,85 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$q = $this->pql()->test->val->notLike('t%')->value();
 		$this->assertEquals(array('one'), $q->toArray(), "SQL: $q");
+	}
+	
+	
+	function testSaveForeignObject() {
+		$this->pql->coding(new pQL_Coding_Typical);
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().")");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", test INT)");
+		
+		$object = $this->pql()->test()->save();
+		$objectB = $this->pql()->testB();
+		$objectB->test = $object;
+		$objectB->save();
+
+		$this->assertEquals($object->id, $this->queryValue("SELECT test FROM pql_test_b"));
+
+		$this->exec("DROP TABLE pql_test_b");
+	}
+	
+	
+	final function testErrorOnSaveWithoutPK() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(225))");
+		$this->setExpectedException('pQL_Exception_PrimaryKeyNotExists');
+		$this->pql()->test()->save();
+	}
+
+
+	final function testCreate() {
+		$val = md5(microtime(true));
+		
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val TEXT)");
+		
+		$object = $this->pql()->test();
+		$this->assertTrue($object instanceof pQL_Object);
+		$this->assertTrue(empty($object->id));
+		$object->val = $val;
+		$object->save();
+
+		$id = $this->lastInsertId();
+		$this->assertEquals($val, $this->queryValue("SELECT val FROM pql_test WHERE val = '$val'"));
+		$this->assertEquals($id, $object->id);
+		$this->assertEquals($val, $this->pql()->test($id)->val);
+		
+		// custom id field
+		$this->exec("DROP TABLE pql_test");
+		$this->exec("CREATE TABLE pql_test(val TEXT, my_int ".$this->getPKExpr().")");
+		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		$this->exec("INSERT INTO pql_test(val) VALUES('second')");
+		$val = md5(microtime(true));
+		$object = $this->pql()->test();
+		$object->val = $val;
+		$object->save();
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test(val) VALUES('last')");
+
+		$this->assertEquals($val, $this->queryValue("SELECT val FROM pql_test WHERE val = '$val'"));
+		$this->assertEquals($id, $object->my_int);
+		$this->assertEquals($val, $this->pql()->test($id)->val);
+	}
+	
+	
+	final function testTableNameTranslate() {
+		$this->pql->coding(new pQL_Coding_Typical);
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().")");
+		$id = $this->pql()->testB()->save()->id;
+		$this->assertEquals($id, $this->queryValue("SELECT id FROM pql_test_b"));
+		$this->exec("DROP TABLE pql_test_b");
+	}
+	
+	
+	function testJoin() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+	}
+	
+	
+	function testJoinSelf() {
+		/**
+		 * @todo
+		 */
 	}
 }

@@ -31,4 +31,14 @@ abstract class pQL_Driver_PDO_Test_Abstract extends pQL_Driver_Test_Abstract {
 	function quote($val) {
 		return is_null($val) ? 'NULL' : $this->db->quote($val);
 	}
+	
+	
+	protected function queryValue($sql) {
+		return $this->db->query($sql)->fetchColumn();
+	}
+	
+	
+	protected function lastInsertId() {
+		return $this->db->lastInsertId();
+	}
 }

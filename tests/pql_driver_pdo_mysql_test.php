@@ -52,16 +52,6 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->pql->tablePrefix('pql_');
 		$this->assertEquals($id, $this->pql()->test($id)->id);
 	}
-	
-	
-	function testTableNameTranslate() {
-		$this->pql->coding(new pQL_Coding_Typical);
-		$this->db->exec("DROP TABLE IF EXISTS pql_test_b");
-		$this->db->exec("CREATE TABLE pql_test_b(id INT AUTO_INCREMENT PRIMARY KEY)");
-		$id = $this->pql()->testB()->save()->id;
-		$this->assertEquals($id, $this->db->query("SELECT id FROM pql_test_b")->fetch(PDO::FETCH_OBJ)->id);
-		$this->db->exec("DROP TABLE pql_test_b");
-	}
 
 
 	function testFieldNameTranslate() {
@@ -73,61 +63,9 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$obj->save();
 		$this->assertEquals($val, $this->pql()->test($val)->myLongProperty);
 	}
-
-
-	function testCreate() {
-		$val = md5(microtime(true));
-		
-		$this->db->exec("CREATE TABLE pql_test(id INT AUTO_INCREMENT PRIMARY KEY, val TEXT)");
-		
-		$object = $this->pql()->test();
-		$this->assertTrue($object instanceof pQL_Object);
-		$this->assertTrue(empty($object->id));
-		$object->val = $val;
-		$object->save();
-
-		$id = $this->db->lastInsertId();
-		$this->assertEquals($val, $this->db->query("SELECT val FROM pql_test WHERE val = '$val'")->fetch(PDO::FETCH_OBJ)->val);
-		$this->assertEquals($id, $object->id);
-		$this->assertEquals($val, $this->pql()->test($id)->val);
-		
-		// custom id field
-		$this->db->exec("DROP TABLE pql_test");
-		$this->db->exec("CREATE TABLE pql_test(val TEXT, my_int INT AUTO_INCREMENT PRIMARY KEY)");
-		$this->db->exec("INSERT INTO pql_test(val) VALUES('first'),('second')");
-		$val = md5(microtime(true));
-		$object = $this->pql()->test();
-		$object->val = $val;
-		$object->save();
-		$id = $this->db->lastInsertId();
-		$this->db->exec("INSERT INTO pql_test(val) VALUES('last')");
-
-		$this->assertEquals($val, $this->db->query("SELECT val FROM pql_test WHERE val = '$val'")->fetch(PDO::FETCH_OBJ)->val);
-		$this->assertEquals($id, $object->my_int);
-		$this->assertEquals($val, $this->pql()->test($id)->val);
-	}
 	
 	
-	function testErrorOnSaveWithoutPK() {
-		$this->db->exec("CREATE TABLE pql_test(val VARCHAR(225))");
-		$this->setExpectedException('pQL_Exception_PrimaryKeyNotExists');
-		$this->pql()->test()->save();
-	}
-	
-	
-	function testSaveForeignObject() {
-		$this->pql->coding(new pQL_Coding_Typical);
-		$this->db->exec("CREATE TABLE pql_test(id INT AUTO_INCREMENT PRIMARY KEY)");
-		$this->db->exec("DROP TABLE IF EXISTS pql_test_b");
-		$this->db->exec("CREATE TABLE pql_test_b(id INT AUTO_INCREMENT PRIMARY KEY, test INT)");
-		
-		$object = $this->pql()->test()->save();
-		$objectB = $this->pql()->testB();
-		$objectB->test = $object;
-		$objectB->save();
-
-		$this->assertEquals($object->id, $this->db->query("SELECT test FROM pql_test_b")->fetch(PDO::FETCH_OBJ)->test);
-
-		$this->db->exec("DROP TABLE pql_test_b");
+	protected function getPKExpr() {
+		return 'INT AUTO_INCREMENT PRIMARY KEY';
 	}
 }
