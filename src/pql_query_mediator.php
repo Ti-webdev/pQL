@@ -2,6 +2,7 @@
 /**
  * Посредник между pQL_Query и pQL_Driver
  * @author Ti
+ * @package pQL
  */
 final class pQL_Query_Mediator {
 	/**

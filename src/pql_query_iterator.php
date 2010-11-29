@@ -1,4 +1,10 @@
 <?php
+/**
+ * Итератор pQL запроса
+ * 
+ * @author Ti
+ * @package pQL
+ */
 final class pQL_Query_Iterator implements Iterator {
 	private $driver;
 	function __construct(pQL_Driver $driver) {

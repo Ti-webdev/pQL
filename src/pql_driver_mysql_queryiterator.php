@@ -1,5 +1,10 @@
 <?php
-class pQL_Driver_MySQL_Iterator implements SeekableIterator, Countable {
+/**
+ * Итератор SELECT запроса для MySQL драйвера
+ * @author Ti
+ * @package pQL
+ */
+class pQL_Driver_MySQL_QueryIterator implements SeekableIterator, Countable {
 	private $query;
 	private $current;
 	private $key;

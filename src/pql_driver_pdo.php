@@ -2,6 +2,7 @@
 /**
  * Абстрактный PDO драйвер для pQL
  * @author Ti
+ * @package pQL
  */
 abstract class pQL_Driver_PDO extends pQL_Driver {
 	private $dbh;

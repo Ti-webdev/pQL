@@ -8,7 +8,6 @@
  * - подстановки для IDE
  *
  * @author Ti
- * @version 0.1 alpha
  * @package pQL
  */
 final class pQL {

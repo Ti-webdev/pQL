@@ -1,5 +1,9 @@
 <?php
-class pQL_Driver_MySQL_Exception extends pQL_Exception {
+/**
+ * @author Ti
+ * @package pQL
+ */
+class pQL_Driver_MySQL_QueryException extends pQL_Exception {
 	private $query;
 
 

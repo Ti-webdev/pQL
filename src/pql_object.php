@@ -1,4 +1,10 @@
 <?php
+/**
+ * Базовый класс объекта pQL
+ * 
+ * @author Ti
+ * @package pQL
+ */
 abstract class pQL_Object {
 	function __construct(pQL $pQL, $properties) {
 		$this->properties = $properties;

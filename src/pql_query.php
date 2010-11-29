@@ -1,4 +1,8 @@
 <?php
+/**
+ * @author Ti
+ * @package pQL
+ */
 final class pQL_Query implements IteratorAggregate, Countable {
 	function __construct(pQL_Driver $driver) {
 		$this->driver = $driver;

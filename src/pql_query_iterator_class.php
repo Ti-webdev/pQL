@@ -1,4 +1,8 @@
 <?php
+/**
+ * @author Ti
+ * @package pQL
+ */
 final class pQL_Query_Iterator_Class {
 	/**
 	 * Класс итератора выборки

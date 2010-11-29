@@ -3,7 +3,6 @@
  * Абстрактный драйвер pQL 
  * @author Ti
  * @package pQL
- *
  */
 abstract class pQL_Driver {
 	/**

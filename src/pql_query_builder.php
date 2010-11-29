@@ -1,4 +1,10 @@
 <?php
+/**
+ * Построитель запросов
+ * 
+ * @author Ti
+ * @package pQL
+ */
 final class pQL_Query_Builder {
 	private $registeredTables = array();
 

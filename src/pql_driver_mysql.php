@@ -20,7 +20,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	private function query($query) {
 		$result = is_null($this->db) ? mysql_query($query) : mysql_query($query, $this->db);
-		if (!$result) throw new pQL_Driver_MySQL_Exception(mysql_error(), mysql_errno(), $query);
+		if (!$result) throw new pQL_Driver_MySQL_QueryException(mysql_error(), mysql_errno(), $query);
 		return $result;
 	}
 
@@ -124,7 +124,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	function getQueryIterator(pQL_Query_Mediator $mediator) {
 		$handle = $mediator->getQueryHandler($this);
-		return new pQL_Driver_MySQL_Iterator($handle);
+		return new pQL_Driver_MySQL_QueryIterator($handle);
 	}
 
 
