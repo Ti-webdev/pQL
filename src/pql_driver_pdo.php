@@ -18,9 +18,6 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	abstract protected function getTablePrimaryKey($table);
-
-
 	function findByPk($class, $value) {
 		$tr = $this->getTranslator();
 		$table = $tr->classToTable($class);
@@ -56,8 +53,8 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		}
 		return $this->getDbh()->lastInsertId();
 	}
-	
-	
+
+
 	final function getQueryHandler(pQL_Query_Builder $builder) {
 		return $this->getDbh()->query($builder->getSQL($this));
 	}

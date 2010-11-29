@@ -1,10 +1,13 @@
 <?php
 final class pQL_Query_Builder {
 	private $registeredTables = array();
+
+
 	/**
 	 * Регистрирует талбицу (но не добавлет в выбоку!)
+	 * 
 	 * @param pQL_Query_Builder_Table $tableName
-	 * @return pQL_Query_Builder_Table
+	 * @return pQL_Query_Builder_Table зарегистрированна таблица
 	 */
 	function registerTable($tableName) {
 		if (isset($this->registeredTables[$tableName])) {
@@ -26,7 +29,7 @@ final class pQL_Query_Builder {
 	 * 
 	 * @param pQL_Query_Builder_Table $rTable
 	 * @param string $fieldName
-	 * @return pQL_Query_Builder_Field
+	 * @return pQL_Query_Builder_Field зарегистрированное поле
 	 */
 	function registerField(pQL_Query_Builder_Table $bTable, $fieldName) {
 		if (isset($this->registeredFields[$bTable->getName()][$fieldName])) {
@@ -44,6 +47,7 @@ final class pQL_Query_Builder {
 
 	/**
 	 * Возращает номер таблицы в запросе
+	 * 
 	 * @param pQL_Query_Builder_Table $table
 	 * @return int
 	 */
@@ -54,7 +58,38 @@ final class pQL_Query_Builder {
 	}
 
 
+	/**
+	 * Добавляет таблицу в запрос
+	 */
+	function addTable(pQL_Query_Builder_Table $bTable) {
+		$this->getTableNum($bTable);
+	}
+
+
+	/**
+	 * Проверяет есть ли таблица в запросе
+	 * 
+	 * @param pQL_Query_Builder_Table $bTable
+	 * @return bool
+	 */
+	function tableExists(pQL_Query_Builder_Table $bTable) {
+		return false !== array_search($bTable, $this->tables);
+	}
+	
+	
+	/**
+	 * Возращает список талбиц которые будут добавлены в FROM или JOIN выражения
+	 * 
+	 * @return array
+	 */
+	function getFromTables() {
+		return $this->tables;
+	}
+
+
 	private $fields = array();
+
+
 	/**
 	 * Возращает номер поля в запросе
 	 * @param pQL_Query_Builder_Table $bTable
@@ -75,27 +110,29 @@ final class pQL_Query_Builder {
 			$result .= $this->getTableAlias($rField->getTable());
 			$result .= '.';
 			$result .= $rField->getName();
+			
+			// В именнованных алиасах пока нет необходимости
 			#$result .= ' AS ';
 			#$result .= $this->getFieldAlias($rField);
 		}
 		return $result;
 	}
-	
-	
+
+
 	private function getFieldAlias(pQL_Query_Builder_Field $bField) {
 		return 'f'.$this->getFieldNum($bField);
 	}
-	
-	
+
+
 	function getTableAlias(pQL_Query_Builder_Table $bTable) {
 		return 't'.$this->getTableNum($bTable);
 	}
 
 
+	/**
+	 * @return string выражение FROM включая все JOIN
+	 */
 	private function getSQLFrom() {
-		// if empty from - add first table!
-		if (empty($this->tables)) $this->getTableNum(reset($this->registeredTables));
-
 		$result = '';
 		foreach($this->tables as $tableNum=>$rTable) {
 			if ($tableNum) $result .= ', ';
@@ -116,8 +153,8 @@ final class pQL_Query_Builder {
 
 		return $this;
 	}
-	
-	
+
+
 	private $limit = 0;
 	function setLimit($limit) {
 		$this->limit = (int) $limit;

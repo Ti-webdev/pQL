@@ -35,7 +35,7 @@ final class pQL_Query_Mediator {
 	}
 
 
-	function clearResult() {
+	function cleanResult() {
 		$this->count = null;
 		$this->iterator = null;
 		$this->queryHandler = null;
@@ -119,12 +119,14 @@ final class pQL_Query_Mediator {
 	private function setupValue(pQL_Driver $driver) {
 		$field = $this->valueField ? $this->valueField : $this->lastField;
 		if ($field) {
+			$driver->joinTable($this, $field->getTable());
 			$index = $this->builder->getFieldNum($field);
 			$this->iterator->setValueIndex($index);
 			return;
 		}
 
 		$table = $this->valueTable ? $this->valueTable : $this->firstTable;
+		$driver->joinTable($this, $table);
 		$tableName = $table->getName();
 		$className = $driver->tableToClass($tableName);
 		$keys = array();

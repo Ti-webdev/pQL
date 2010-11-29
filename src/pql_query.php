@@ -9,6 +9,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 	/**
 	 * Переход на уровень таблицы или поля
+	 * 
 	 * @param string $oName
 	 * @return pQL_Query
 	 */
@@ -22,7 +23,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 		return $this;
 	}
-	
+
 
 	/**
 	 * Переход на уровень базы
@@ -63,12 +64,18 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	}
 
 
+	/**
+	 * @param mixed $val
+	 */
 	function in($val) {
 		$this->addArgsExpr(func_get_args(), 'IN', '=', 'OR', 'getIsNullExpr');
 		return $this;
 	}
 
 
+	/**
+	 * @param mixed $val
+	 */
 	function not($val) {
 		$this->addArgsExpr(func_get_args(), 'NOT IN', '<>', 'AND', 'getNotNullExpr');
 		return $this;
@@ -110,8 +117,8 @@ final class pQL_Query implements IteratorAggregate, Countable {
 			$this->builder->addWhere($expression);
 		}
 	}
-	
-	
+
+
 	function between($min, $max) {
 		$this->cleanResult();
 		$field = $this->getField();
@@ -133,8 +140,8 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->addWhereSymbol('<=', $value);
 		return $this;
 	}
-	
-	
+
+
 	function gt($value) {
 		$this->addWhereSymbol('>', $value);
 		return $this;
@@ -226,8 +233,8 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->builder = $this->mediator->getBuilder();
 		#$this->cleanResult();
 	}
-
-
+	
+	
 	/**
 	 * @var pQL_Driver
 	 */
@@ -265,7 +272,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * очищать результат предыдущей выборки
 	 */
 	private function cleanResult() {
-		$this->mediator->clearResult();
+		$this->mediator->cleanResult();
 	}
 
 
@@ -296,17 +303,25 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->assertClassDefined();
 		if (!$this->field) throw new pQL_Exception('Select property first!');
 	}
+	
+	
+	
+	private function joinCurrentTable() {
+		$this->driver->joinTable($this->mediator, $this->table);
+	}
 
 
 	private function getField() {
 		$this->assertPropertyDefined();
+		$this->joinCurrentTable();
+
 		$result = $this->builder->getTableAlias($this->table);
 		$result .= '.';
 		$result .= $this->field->getName();
 		return $result;
 	}
-	
-	
+
+
 	private function addWhereSymbol($symbol, $value) {
 		$this->cleanResult();
 		$field = $this->getField();

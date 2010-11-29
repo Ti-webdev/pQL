@@ -111,6 +111,16 @@ abstract class pQL_Driver {
 	abstract function isSupportRewindQuery();
 
 
+
+
+	/**
+	 * Взращает PRIMARY KEY поле таблицы
+	 * @param string $table
+	 * @return string
+	 */
+	abstract protected function getTablePrimaryKey($table);
+
+
 	/**
 	 * Возращает поля таблицы
 	 * @param string $table
@@ -174,5 +184,77 @@ abstract class pQL_Driver {
 
 	final function fieldToProperty($field) {
 		return $this->getTranslator()->fieldToProperty($field);
+	}
+	
+	
+	/**
+	 * Объединяет таблицы в запросе
+	 * 
+	 * @param pQL_Query_Mediator $mediator
+	 * @param pQL_Query_Builder_Table $table
+	 */
+	function joinTable(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
+		$builder = $mediator->getBuilder();
+
+		// талбица уже в запросе
+		if ($builder->tableExists($table)) return;
+
+		$tables = $builder->getFromTables();
+
+		// нет таблиц в запросе - не нужно объединять
+		if (count($tables) < 1) {
+			$builder->addTable($table);
+			return;
+		}
+
+
+		// Ищем таблицу с которой можно объедениться
+		foreach($tables as $joinTable) {
+			$joinFields = $this->getJoinTableFields($table->getName(), $joinTable->getName());
+			if ($joinFields) {
+				// нашли - объединяем
+				list($fieldA, $fieldB) = $joinFields;
+				$expr = $builder->getTableAlias($table).'.'.$fieldA;
+				$expr .= ' = ';
+				$expr .= $builder->getTableAlias($joinTable).'.'.$fieldB;
+				$builder->addWhere($expr);
+				return;
+			}
+		}
+	}
+
+
+	/**
+	 * Возращает два поля по которым возможно объединение таблиц
+	 * Если объединение не возможно возращает NULL
+	 * 
+	 * @param string $tableA
+	 * @param string $tableB
+	 * @return array | null
+	 */
+	private function getJoinTableFields($tableA, $tableB) {
+		$fieldB = $this->getJoinSecondTableFieldToFirstTable($tableA, $tableB);
+
+		if ($fieldB) return array($this->getTablePrimaryKey($tableA), $fieldB);
+
+		$fieldA = $this->getJoinSecondTableFieldToFirstTable($tableB, $tableA);
+		if ($fieldA) return array($fieldA, $this->getTablePrimaryKey($tableB));
+
+		return;
+	}
+
+
+	/**
+	 * Опередляет поле второй таблицы объединения с первой
+	 * @return string | null
+	 */
+	private function getJoinSecondTableFieldToFirstTable($tableA, $tableB) {
+		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
+		foreach($this->getTableFields($tableB) as $fieldB) {
+			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $fieldB);
+			$tableASuffix = substr($tableNameA, strlen($fieldBSuffix));
+			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
+		}
+		return;
 	}
 }

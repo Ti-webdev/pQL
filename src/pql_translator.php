@@ -54,7 +54,7 @@ final class pQL_Translator {
 	function classToTable($className, $addQuotes = true) {
 		$result = $this->getTableCoding()->toDb($className);
 		$result = $this->tablePrefix.$result;
-		if ($addQuotes) $this->addDbQuotes($result);
+		if ($addQuotes) $result = $this->addDbQuotes($result);
 		return $result;
 	}
 	
@@ -73,13 +73,13 @@ final class pQL_Translator {
 	}
 
 
-	function addDbQuotes($field) {
-		return $this->dbQuote.$field.$this->dbQuote;
+	function addDbQuotes($name) {
+		return $this->dbQuote.$name.$this->dbQuote;
 	}
 	
 	
-	private function removeDbQuotes($property) {
-		return '' === $this->dbQuote ? $property : trim($property, $this->dbQuote);
+	function removeDbQuotes($name) {
+		return '' === $this->dbQuote ? $name : trim($name, $this->dbQuote);
 	}
 
 	

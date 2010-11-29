@@ -515,8 +515,8 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($id, $this->queryValue("SELECT id FROM pql_test_b"));
 		$this->exec("DROP TABLE pql_test_b");
 	}
-	
-	
+
+
 	function testJoin() {
 		$this->pql->coding(new pQL_Coding_Typical);
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
@@ -529,15 +529,22 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("INSERT INTO pql_test(val) VALUES('last')");
 		$lastId = $this->lastInsertId();
 		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($secondId, 'b_second')");
-		
+
 		$this->assertEquals('b_second', $this->pql()->testB->db()->test->val->in('second')->one()->val);
 
 		$this->assertEquals(0, count($this->pql()->testB->db()->test->val->in('frist', 'last')));
-		
+
 		$this->exec("DROP TABLE IF EXISTS pql_test");
 	}
 	
 	
+	function testJoinType() {
+		/**
+		 * @todo
+		 */
+	}
+
+
 	function testJoinSelf() {
 		/**
 		 * @todo
