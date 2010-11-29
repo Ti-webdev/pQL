@@ -536,8 +536,15 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$this->exec("DROP TABLE IF EXISTS pql_test");
 	}
-	
-	
+
+
+	function testJoinUsingForeignKey() {
+		/**
+		 * @todo
+		 */
+	}
+
+
 	function testJoinType() {
 		/**
 		 * @todo
