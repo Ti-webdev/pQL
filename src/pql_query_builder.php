@@ -166,6 +166,11 @@ final class pQL_Query_Builder {
 		$this->limit = (int) $limit;
 	}
 	
+	
+	function getLimit() {
+		return $this->limit;
+	}
+	
 
 	private $offset = 0;
 	function setOffset($offset) {

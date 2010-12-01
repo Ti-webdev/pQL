@@ -204,9 +204,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	
 	function one() {
-		$q = clone $this;
-		foreach($q->limit(1) as $result) return $result;
-		return null;
+		$limit = $this->builder->getLimit();
+		$this->builder->setLimit(1);
+		$result = null;
+		foreach($this as $value) $result = $value;
+		$this->builder->setLimit($limit);
+		$this->cleanResult();
+		return $result;
 	}
 
 

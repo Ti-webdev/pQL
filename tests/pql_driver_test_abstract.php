@@ -36,6 +36,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
 		$this->exec("INSERT INTO pql_test VALUES('$val')");
 		$this->assertEquals($val, $this->pql()->test->one()->val);
+		$this->assertEquals($val, $this->pql()->test->val->one());
 	}
 
 	
@@ -556,5 +557,37 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		/**
 		 * @todo
 		 */
+	}
+	
+	
+	function testMySQLNameQuote() {
+		if (false === stripos(get_class($this->pql->driver()), 'mysql')) return;
+		
+		$expected = md5(microtime(true));
+		$this->exec("DROP TABLE IF EXISTS `and`");
+		$this->exec("CREATE TABLE `and`(`delete` VARCHAR(255))");
+		$this->exec("INSERT INTO `and` VALUES ('$expected')");
+		$this->pql->tablePrefix('');
+		$this->assertEquals($expected, $this->pql()->and->one()->delete);
+		$this->exec("DROP TABLE `and`");
+	}
+	
+	
+	function testBind() {
+		/**
+		 * @todo
+		 */
+	}
+	
+	
+	function testQueryTable() {
+		return;
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$expected = md5(microtime(true));
+		$q = $this->pql()->test->val->table()->bind($object)->val;
+		foreach($q as $val) {
+			return $this->assertEquals($expected, $object->val);
+		}
+		$this->fail('object not found');
 	}
 }
