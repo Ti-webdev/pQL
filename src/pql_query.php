@@ -47,7 +47,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @return pQL_Query
 	 */
 	function key() {
-		$this->assertPropertyDefined();
+		$this->assertFieldDefined();
 		$this->cleanResult();
 		$this->mediator->setKeyField($this->field);
 		return $this;
@@ -60,7 +60,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @return pQL_Query
 	 */
 	function value() {
-		$this->assertClassDefined();
+		$this->assertTableDefined();
 		$this->cleanResult();
 		if ($this->field) $this->mediator->setFieldValue($this->field);
 		else $this->mediator->setTableValue($this->table);
@@ -201,8 +201,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function toArray() {
 		return iterator_to_array($this->getIterator());
 	}
-	
-	
+
+
+	/**
+	 * Возращает первое значение в запросе (с установкой всех привязанных переменных)
+	 * @see bind
+	 */
 	function one() {
 		$limit = $this->builder->getLimit();
 		$this->builder->setLimit(1);
@@ -212,6 +216,30 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->cleanResult();
 		return $result;
 	}
+	
+	
+	/**
+	 * Привязывает к переменной значение поля или объект в запросе
+	 * Используется для жадной выборки
+	 */
+	function bind(&$var) {
+		$this->cleanResult();
+		if ($this->field) $this->bindField($var);
+		else $this->bindTable($var);
+		return $this;
+	}
+	
+	
+	private function bindField(&$var) {
+		$this->assertFieldDefined();
+		$this->mediator->bindField($var, $this->field);
+	}
+	
+	
+	private function bindTable(&$var) {
+		$this->assertTableDefined();
+		$this->mediator->bindTable($var, $this->table);
+	}
 
 
 	/**
@@ -219,13 +247,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @return pQL_Query_Iterator
 	 */
 	function getIterator() {
-		$this->assertClassDefined();
+		$this->assertTableDefined();
 		return $this->mediator->getIterator($this->driver);
 	}
 
 
 	function count() {
-		$this->assertClassDefined();
+		$this->assertTableDefined();
 		return $this->mediator->getCount($this->driver);
 	}
 
@@ -302,13 +330,13 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	}
 
 
-	private function assertClassDefined() {
+	private function assertTableDefined() {
 		if (!$this->table) throw new pQL_Exception('Select class first!');
 	}
 
 
-	private function assertPropertyDefined() {
-		$this->assertClassDefined();
+	private function assertFieldDefined() {
+		$this->assertTableDefined();
 		if (!$this->field) throw new pQL_Exception('Select property first!');
 	}
 	
@@ -320,7 +348,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 
 	private function getField() {
-		$this->assertPropertyDefined();
+		$this->assertFieldDefined();
 		$this->joinCurrentTable();
 
 		$result = $this->builder->getTableAlias($this->table);

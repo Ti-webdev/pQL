@@ -48,14 +48,42 @@ final class pQL_Query_Iterator implements Iterator {
 		$this->valueClass = new pQL_Query_Iterator_Class($className, $keys);
 		$this->valueIndex = null;
 	}
+	
+	
+	private $bindedObjectClasses = array();
+	function bindValueObject(&$var, $className, $keys) {
+		$this->bindedObjectClasses[] = array(&$var, $className, $keys);
+	}
+	
+	
+	private $bindedIndexes = array();
+	function bindValueIndex(&$var, $index) {
+		$this->bindedIndexes[] = array(&$var, $index);
+	}
+	
+	
+	private function setBindValues($current) {
+		foreach($this->bindedIndexes as &$bind) {
+			$bind[0] = $current[$bind[1]];
+		}
+		foreach($this->bindedObjectClasses as &$bind) {
+			$bind[0] = $this->getObject($current, $bind[1], $bind[2]);
+		}
+	}
+	
+	
+	private function getObject($current, $className, $inds) {
+		$properties = array();
+		foreach($inds as $i=>$name) $properties[$name] = $current[$i];
+		return $this->driver->getObject($className, $properties);
+	}
 
 
 	function current() {
 		$current = $this->iterator->current();
+		$this->setBindValues($current);
 		if (is_null($this->valueIndex)) {
-			$properties = array();
-			foreach($this->valueClass->getIndexes() as $i=>$name) $properties[$name] = $current[$i];
-			return $this->driver->getObject($this->valueClass->getName(), $properties);
+			return $this->getObject($current, $this->valueClass->getName(), $this->valueClass->getIndexes());
 		}
 		else {
 			return $current[$this->valueIndex];

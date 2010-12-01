@@ -256,4 +256,16 @@ abstract class pQL_Driver {
 		}
 		return;
 	}
+	
+	
+	final function getQueryPropertiesKeys(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
+		$result = array();
+		$builder = $mediator->getBuilder();
+		foreach($this->getTableFields($table->getName()) as $fieldName) {
+			$field = $builder->registerField($table, $fieldName);
+			$num = $builder->getFieldNum($field);
+			$result[$num] = $this->fieldToProperty($field->getName());
+		}
+		return $result;
+	}
 }

@@ -89,8 +89,10 @@ final class pQL_Query_Mediator {
 	function setup(pQL_Driver $driver) {
 		if (is_null($this->iterator)) {
 			$this->iterator = new pQL_Query_Iterator($driver);
-			$this->setupKeyIndex();
-			$this->setupValue($driver);
+			$this->setupIteratorKeyIndex();
+			$this->setupValueIterator($driver);
+			$this->setupBindTables($driver);
+			$this->setupBindFields($driver);
 		}
 		return $this->iterator;
 	}
@@ -106,7 +108,7 @@ final class pQL_Query_Mediator {
 	/**
 	 * устанавливаем ключи в итератор
 	 */
-	private function setupKeyIndex() {
+	private function setupIteratorKeyIndex() {
 		if ($this->keyField) {
 			$index = $this->builder->getFieldNum($this->keyField);
 			$this->iterator->setKeyIndex($index);
@@ -117,7 +119,7 @@ final class pQL_Query_Mediator {
 	/**
 	 * определяем значения в итератор
 	 */
-	private function setupValue(pQL_Driver $driver) {
+	private function setupValueIterator(pQL_Driver $driver) {
 		$field = $this->valueField ? $this->valueField : $this->lastField;
 		if ($field) {
 			$driver->joinTable($this, $field->getTable());
@@ -128,15 +130,49 @@ final class pQL_Query_Mediator {
 
 		$table = $this->valueTable ? $this->valueTable : $this->firstTable;
 		$driver->joinTable($this, $table);
-		$tableName = $table->getName();
-		$className = $driver->tableToClass($tableName);
-		$keys = array();
-		foreach($driver->getTableFields($tableName) as $fieldName) {
-			$field = $this->builder->registerField($table, $fieldName);
-			$num = $this->builder->getFieldNum($field);
-			$keys[$num] = $driver->fieldToProperty($field->getName());
-		}
+		$className = $driver->tableToClass($table->getName());
+		$keys = $driver->getQueryPropertiesKeys($this, $table);
 		$this->iterator->setValueClass($className, $keys);
+	}
+	
+	
+	private function setupBindFields(pQL_Driver $driver) {
+		foreach($this->bindedFields as &$bind) {
+			$var = &$bind[0];
+			$field = $bind[1];
+			$num = $this->builder->getFieldNum($field);
+			$this->iterator->bindValueIndex($var, $num);
+
+			unset($field, $var);
+		}
+	}
+	
+	
+	private function setupBindTables(pQL_Driver $driver) {
+		foreach($this->bindedTables as &$bind) {
+			$var = &$bind[0];
+			$table = $bind[1];
+
+			$driver->joinTable($this, $table);
+			$className = $driver->tableToClass($table->getName());
+
+			$keys = $driver->getQueryPropertiesKeys($this, $table);
+			$this->iterator->bindValueObject($var, $className, $keys);
+
+			unset($table, $var);
+		}
+	}
+	
+	
+	private $bindedTables = array();
+	function bindTable(&$var, pQL_Query_Builder_Table $table) {
+		$this->bindedTables[] = array(&$var, $table);
+	}
+	
+	
+	private $bindedFields = array();
+	function bindField(&$var, pQL_Query_Builder_Field $field) {
+		$this->bindedFields[] = array(&$var, $field);
 	}
 
 
