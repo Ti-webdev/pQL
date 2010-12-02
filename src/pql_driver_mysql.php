@@ -7,8 +7,14 @@
 final class pQL_Driver_MySQL extends pQL_Driver {
 	private $db;
 	function __construct($db = null) {
-		if (!is_resource($db) and !is_null($db)) throw new InvalidArgumentException('Invalid db connection');
-		$this->db = $db;
+		if (is_null($db)) {
+			if (!function_exists('mysql_query')) throw new pQL_Exception('MySQL extension not loaded!');
+			$this->db = null;
+		}
+		else {
+			if (!is_resource($db)) throw new InvalidArgumentException('Invalid db connection');
+			$this->db = $db;
+		}
 	}
 
 
