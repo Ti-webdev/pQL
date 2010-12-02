@@ -35,8 +35,9 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$val = md5(microtime(true));
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
 		$this->exec("INSERT INTO pql_test VALUES('$val')");
+		$q = $this->pql()->test->val;
+		$this->assertEquals($val, $q->one(), "SQL: $q");
 		$this->assertEquals($val, $this->pql()->test->one()->val);
-		$this->assertEquals($val, $this->pql()->test->val->one());
 	}
 
 	
