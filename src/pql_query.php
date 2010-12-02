@@ -207,7 +207,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * Возращает первое значение в запросе (с установкой всех привязанных переменных)
 	 * @see bind
 	 */
-	function one() {
+	function one() { 
 		$limit = $this->builder->getLimit();
 		$this->builder->setLimit(1);
 		$result = null;
@@ -219,13 +219,25 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	
 	/**
-	 * Привязывает к переменной значение поля или объект в запросе
+	 * Привязывает к переменной $var значение поля или объект в запросе
+	 * При итерации запроса значение привязанной переменной будедт прнимать соответствующее занчение
 	 * Используется для жадной выборки
 	 */
 	function bind(&$var) {
 		$this->cleanResult();
 		if ($this->field) $this->bindField($var);
 		else $this->bindTable($var);
+		return $this;
+	}
+
+
+	/**
+	 * Отвязывает переменную $var
+	 * @see bind
+	 */
+	function unbind(&$var) {
+		$this->cleanResult();
+		$this->mediator->unbind($var);
 		return $this;
 	}
 	

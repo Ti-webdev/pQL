@@ -586,12 +586,48 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("INSERT INTO pql_test(val) VALUES('last')");
 		$lastId = $this->lastInsertId();
 		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($secondId, 'b_second')");
+		
+		// property
+		$this->pql()->testB->db()->test->id->bind($id1)->one();
+		$this->assertEquals($secondId, $id1);
 
-		$this->pql()->testB->db()->test->bind($test)->id->bind($id)->one();
-		$this->assertEquals('second', $test->val);
-		$this->assertEquals($secondId, $id);
+		// object
+		$this->pql()->testB->db()->test->bind($test2)->one();
+		$this->assertEquals('second', $test2->val);
+
+		// mixed
+		$this->pql()->testB->db()->test->bind($test3)->id->bind($id3)->one();
+		$this->assertEquals('second', $test3->val);
+		$this->assertEquals($secondId, $id3);
 
 		$this->exec("DROP TABLE pql_test_b");
+	}
+	
+	
+	function testUnbind() {
+		$this->pql->coding(new pQL_Coding_Typical);
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
+		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		$firstId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test(val) VALUES('second')");
+		$secondId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test(val) VALUES('last')");
+		$lastId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($secondId, 'b_second')");
+		
+		$q = $this->pql()->testB;
+		$q->db()->test->id->bind($id);
+		$q->db()->test->bind($test);
+		$q->one();
+		$this->assertEquals($secondId, $id);
+		$this->assertEquals('second', $test->val);
+		$q->unbind($test)->unbind($id);
+		$id = $test = $expected = md5(microtime(true));
+		$q->one();
+		$this->assertEquals($expected, $id);
+		$this->assertEquals($expected, $test);
 	}
 	
 	

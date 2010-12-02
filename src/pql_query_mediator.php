@@ -140,6 +140,9 @@ final class pQL_Query_Mediator {
 		foreach($this->bindedFields as &$bind) {
 			$var = &$bind[0];
 			$field = $bind[1];
+			
+			$driver->joinTable($this, $field->getTable());
+			
 			$num = $this->builder->getFieldNum($field);
 			$this->iterator->bindValueIndex($var, $num);
 
@@ -174,7 +177,30 @@ final class pQL_Query_Mediator {
 	function bindField(&$var, pQL_Query_Builder_Field $field) {
 		$this->bindedFields[] = array(&$var, $field);
 	}
+	
+	
+	function unbind(&$var) {
+		$varValue = $var;
+		$var = 'A';
+		foreach(array('bindedTables', 'bindedFields') as $type) {
+			foreach($this->$type as $i=>&$bind) {
+				// определяем, является ли ссылкой на $var
+				if ($bind[0] !== $var) continue;
 
+				$bindValue = $bind[0];
+				$bind[0] = 'B';
+				if ($bind[0] !== $var) {
+					$bind[0] = $bindValue;
+					continue;
+				}
+
+				// удаляем ссылку
+				unset($this->{$type}[$i]);
+			}
+		}
+		$var = $varValue;
+	}
+	
 
 	/**
 	 * Низкоуровневый итератор запроса
