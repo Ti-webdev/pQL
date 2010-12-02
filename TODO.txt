@@ -1,6 +1,10 @@
-- foreign object
 - custom class name for pQL objects
+- ленивая загрузка
+- foreign object
+- объединение таблиц через соседние таблицы
+- подстановки для IDE
 - namespace objects
-- pQL objects autoloader
+- countAll() - COUNT(*)
+- к исключению "таблицы(поле) не существует" прикрутить список существующих талбиц(полей)
 - Опционально: автосоздание и модификация таблиц
 - Drizzle support (prefomance fork of mysql http://drizzle.org/)
