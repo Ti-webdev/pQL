@@ -148,9 +148,4 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	final function getParam($val) {
 		return $this->quote($val);
 	}
-	
-	
-	function isSupportRewindQuery() {
-		return true;
-	}
 }

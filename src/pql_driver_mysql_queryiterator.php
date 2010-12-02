@@ -38,7 +38,7 @@ class pQL_Driver_MySQL_QueryIterator implements SeekableIterator, Countable {
 
 	function rewind() {
 		// перематываем на начало
-		if (!is_null($this->key)) mysql_data_seek($this->query, 0);
+		if (!is_null($this->key)) $this->seek(0);
 
 		$this->key = -1;
 		$this->next();
@@ -47,6 +47,7 @@ class pQL_Driver_MySQL_QueryIterator implements SeekableIterator, Countable {
 
 	function seek($position) {
 		mysql_data_seek($this->query, $position);
+		$this->key = $position;
 	}
 
 

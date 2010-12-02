@@ -104,11 +104,8 @@ abstract class pQL_Driver {
 	}
 
 
-
 	abstract function getQueryHandler(pQL_Query_Builder $builder);
 	abstract function getQueryIterator(pQL_Query_Mediator $mediator);
-	abstract function isSupportRewindQuery();
-
 
 
 

@@ -201,11 +201,16 @@ final class pQL_Query_Mediator {
 
 
 	function getDriverIterator(pQL_Driver $driver) {
-		// если драйвер не поддерживает несколько итерация одного запроса
-		// пересоздаем запрос
-		if ($this->driverIterator and !$driver->isSupportRewindQuery()) {
-			$this->driverIterator = null;
-			$this->queryHandler = null;
+		if ($this->driverIterator) {
+			if ($this->driverIterator instanceof SeekableIterator) {
+			 	$this->driverIterator->seek(0);
+			}
+			else {
+				// если драйвер не поддерживает несколько итерация одного запроса
+				// пересоздаем запрос
+				$this->driverIterator = null;
+				$this->queryHandler = null;
+			}
 		}
 
 		if (is_null($this->driverIterator)) {
