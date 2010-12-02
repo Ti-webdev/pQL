@@ -5,7 +5,6 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 	function __construct() {
 		$this->db = mysql_connect('localhost', 'test', 'test');
 		mysql_select_db('test', $this->db);
-		parent::__construct();
 		$this->tearDown();
 	}
 
