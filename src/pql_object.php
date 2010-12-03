@@ -23,9 +23,17 @@ abstract class pQL_Object {
 
 
 	function save() {
-		$result = $this->getPQL()->driver()->save($this->getClass(), $this->newProperties, $this->properties);
+		$result = $this->getDriver()->save($this->getClass(), $this->newProperties, $this->properties);
 		$this->properties = array_merge($this->properties, $result);
 		$this->newProperties = array();
+		return $this;
+	}
+	
+	
+	function delete() {
+		$newProperties = $this->getDriver()->delete($this->getClass(), $this->newProperties, $this->properties);
+		$this->properties = array();
+		$this->newProperties = $newProperties;
 		return $this;
 	}
 

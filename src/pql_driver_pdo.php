@@ -54,6 +54,14 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		}
 		return $this->getDbh()->lastInsertId();
 	}
+	
+	
+	function deleteByPk($table, $value) {
+		$pk = $this->getTablePrimaryKey($table);
+		$sth = $this->getDbh()->prepare("DELETE FROM $table WHERE $pk = :pk");
+		$sth->bindValue(':pk', $value);
+		$sth->execute();
+	}
 
 
 	final function getQueryHandler(pQL_Query_Builder $builder) {

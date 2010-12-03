@@ -633,13 +633,22 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	
 	
 	function testQueryTable() {
-		return;
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
 		$expected = md5(microtime(true));
+		$this->exec("INSERT INTO pql_test(val) VALUES('$expected')");
 		$q = $this->pql()->test->val->table()->bind($object)->val;
 		foreach($q as $val) {
 			return $this->assertEquals($expected, $object->val);
 		}
 		$this->fail('object not found');
+	}
+	
+	
+	function testDelete() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().")");
+		$object = $this->pql()->test()->save();
+		$this->assertEquals(1, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
+		$object->delete();
+		$this->assertEquals(0, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
 	}
 }
