@@ -1,3 +1,4 @@
+- delete object
 - add support php 5.1
 - custom class name for pQL objects
 - ленивая загрузка

@@ -24,3 +24,5 @@ foreach($files as $file) {
 	fwrite($fp, "\n$code\n\n");
 }
 fclose($fp);
+
+copy('pql.php', "pql-$version.php");

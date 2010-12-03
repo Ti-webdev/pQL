@@ -116,6 +116,13 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		if (is_null($this->db)) return mysql_insert_id();
 		return mysql_insert_id($this->db);
 	}
+	
+	
+	function deleteByPk($table, $value) {
+		$pk = $this->getTablePrimaryKey($table);
+		$pkValue = $this->quote($value);
+		$this->query("DELETE FROM $table WHERE $pk = $pkValue");
+	}
 
 
 	function getQueryHandler(pQL_Query_Builder $builder) {

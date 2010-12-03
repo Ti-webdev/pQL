@@ -31,11 +31,23 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 	/**
 	 * Переход на уровень базы
+	 * 
 	 * @return pQL_Query
 	 */
 	function db() {
 		$this->field = null;
 		$this->table = null;
+		return $this;
+	}
+	
+	
+	/**
+	 * Переход на уровень таблицы
+	 * 
+	 * @return pQL_Query
+	 */
+	function table() {
+		$this->field = null;
 		return $this;
 	}
 
@@ -83,43 +95,6 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function not($val) {
 		$this->addArgsExpr(func_get_args(), 'NOT IN', '<>', 'AND', 'getNotNullExpr');
 		return $this;
-	}
-
-
-	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) {
-		$field = $this->getField(); 
-		$this->cleanResult();
-
-		$orNull = false;
-		$expression = null;
-		$i = 0;
-		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
-		foreach($vals as $val) {
-			if (is_null($val)) {
-				$orNull = true;
-			}
-			else {
-				if (0 < $i) {
-					if (1 == $i) $expression = "$field $in($expression";
-					$expression .= ','.$this->driver->getParam($val);
-				}
-				else {
-					$expression = $this->driver->getParam($val);
-				}
-				$i++;
-			}
-		}
-		
-		if (0 < $i) {
-			if (1 == $i) $expression = "$field $equals $expression";
-			else $expression .= ')';
-
-			if ($orNull) $expression = "($expression $operator ".$this->driver->getIsNullExpr($field).')';
-			$this->builder->addWhere($expression);
-		} elseif ($orNull) {
-			$expression = $this->driver->$nullFn($field);
-			$this->builder->addWhere($expression);
-		}
 	}
 
 
@@ -239,6 +214,43 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->cleanResult();
 		$this->mediator->unbind($var);
 		return $this;
+	}
+
+
+	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) {
+		$field = $this->getField(); 
+		$this->cleanResult();
+
+		$orNull = false;
+		$expression = null;
+		$i = 0;
+		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
+		foreach($vals as $val) {
+			if (is_null($val)) {
+				$orNull = true;
+			}
+			else {
+				if (0 < $i) {
+					if (1 == $i) $expression = "$field $in($expression";
+					$expression .= ','.$this->driver->getParam($val);
+				}
+				else {
+					$expression = $this->driver->getParam($val);
+				}
+				$i++;
+			}
+		}
+		
+		if (0 < $i) {
+			if (1 == $i) $expression = "$field $equals $expression";
+			else $expression .= ')';
+
+			if ($orNull) $expression = "($expression $operator ".$this->driver->getIsNullExpr($field).')';
+			$this->builder->addWhere($expression);
+		} elseif ($orNull) {
+			$expression = $this->driver->$nullFn($field);
+			$this->builder->addWhere($expression);
+		}
 	}
 	
 	

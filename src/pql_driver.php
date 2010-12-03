@@ -93,10 +93,23 @@ abstract class pQL_Driver {
 		}
 		return $newProperties;
 	}
+	
+	
+	final function delete($class, $newProperties, $properties) {
+		$tr = $this->getTranslator();
+		$table = $tr->classToTable($class);
+		$pk = $this->getTablePrimaryKey($table);
+		$pkProperty = $tr->fieldToProperty($pk);
+		$this->deleteByPk($table, $properties[$pkProperty]);
+		$result= array_merge($properties, $newProperties);
+		unset($result[$pkProperty]);
+		return $result;
+	}
 
 
 	abstract protected function updateByPk($table, $fields, $values, $pkValue);
 	abstract protected function insert($table, $fields, $values);
+	abstract protected function deleteByPk($table, $value);
 
 
 	final function getObject($class, $properties = array()) {
