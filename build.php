@@ -12,7 +12,11 @@ if (!$version) {
 	die(1);
 }
 
-$fp = fopen('pql.php', 'w');
+define('PQL_BUILD_FILE', 'pql.php');
+
+if (file_exists(PQL_BUILD_FILE)) unlink(PQL_BUILD_FILE);
+
+$fp = fopen(PQL_BUILD_FILE, 'w');
 fwrite($fp, "<?php");
 foreach($files as $file) {
 	$code = file_get_contents($file);
@@ -25,4 +29,5 @@ foreach($files as $file) {
 }
 fclose($fp);
 
-copy('pql.php', "pql-$version.php");
+$versionFile = "pql-$version.php";
+if (!file_exists($versionFile)) link(PQL_BUILD_FILE, $versionFile);
