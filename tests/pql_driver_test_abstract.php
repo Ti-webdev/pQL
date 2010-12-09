@@ -1,4 +1,8 @@
 <?php
+class pQL_Object_Test extends pQL_Object {
+	
+}
+
 abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function __destruct() {
 		$this->pql = null;
@@ -20,6 +24,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	/**
+	 * @var pQL
+	 */
+	protected $pql;
 	function tearDown() {
 		$this->pql = null;
 		$this->exec("DROP TABLE IF EXISTS pql_test");
@@ -589,15 +597,18 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($secondId, 'b_second')");
 		
 		// property
-		$this->pql()->testB->db()->test->id->bind($id1)->one();
+		$b = $this->pql()->testB->db()->test->id->bind($id1)->one();
+		$this->assertEquals('b_second', $b->val);
 		$this->assertEquals($secondId, $id1);
 
 		// object
-		$this->pql()->testB->db()->test->bind($test2)->one();
+		$b = $this->pql()->testB->db()->test->bind($test2)->one();
+		$this->assertEquals('b_second', $b->val);
 		$this->assertEquals('second', $test2->val);
 
 		// mixed
-		$this->pql()->testB->db()->test->bind($test3)->id->bind($id3)->one();
+		$b = $this->pql()->testB->db()->test->bind($test3)->id->bind($id3)->one();
+		$this->assertEquals('b_second', $b->val);
 		$this->assertEquals('second', $test3->val);
 		$this->assertEquals($secondId, $id3);
 
