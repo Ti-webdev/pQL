@@ -1,5 +1,6 @@
-.buildpath
-.project
-.settings
-.externalToolBuilders
+/.buildpath
+/.project
+/.settings
+/.externalToolBuilders
 /pql.php
+/pql-*.php
