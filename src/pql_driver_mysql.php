@@ -27,7 +27,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 
 	function getToStringField($class) {
-		$table = $this->getTranslator()->classToTable($class);
+		$table = $this->getTranslator()->modelToTable($class);
 		$result = null;
 		$Q = $this->query("SHOW COLUMNS FROM $table");
 		while($column = mysql_fetch_assoc($Q)) {
@@ -60,7 +60,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	function getTableFields($table) {
 		$result = array();
 		$Q = $this->query("SHOW COLUMNS FROM $table");
-		while($column = mysql_fetch_row($Q)) $result[] = reset($column);
+		while($column = mysql_fetch_row($Q)) $result[] = $this->getTranslator()->addDbQuotes(reset($column));
 		return $result;
 	}
 	
@@ -74,7 +74,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	
 	function findByPk($class, $value) {
 		$tr = $this->getTranslator();
-		$table = $tr->classToTable($class);
+		$table = $tr->modelToTable($class);
 		$pk = $this->getTablePrimaryKey($table);
 		$qValue = $this->quote($value);
 		$Q = $this->query("SELECT * FROM $table WHERE $pk = $qValue");
@@ -152,7 +152,14 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 
 
-	final function getParam($val) {
+	function getParam($val) {
 		return $this->quote($val);
+	}
+	
+	protected function getTables() {
+		$query = $this->query("SHOW TABLES");
+		$result = array();
+		while($row = mysql_fetch_row($query)) $result[] = $this->getTranslator()->addDbQuotes(reset($row));
+		return $result;
 	}
 }

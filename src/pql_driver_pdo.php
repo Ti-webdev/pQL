@@ -21,7 +21,7 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 
 	function findByPk($class, $value) {
 		$tr = $this->getTranslator();
-		$table = $tr->classToTable($class);
+		$table = $tr->modelToTable($class);
 		$pk = $this->getTablePrimaryKey($table);
 		$sth = $this->getDbh()->prepare("SELECT * FROM $table WHERE $pk = :value");
 		$sth->bindValue(':value', $value);

@@ -683,6 +683,24 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testForeignObject() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
+		// записи
+		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($id, 'b_first')");
+		$id = $this->lastInsertId();
+		
+		$this->pql->coding(new pQL_Coding_Typical);
+		$b = $this->pql()->testB->one();
+		$this->assertType('pQL_Object', $b->test);
+		$this->assertEquals('first', $b->test->val);
+	}
+	
+	
 	private function getClassNameTestResultObjects() {
 		return array(
 			// новый объект
@@ -693,11 +711,8 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			'test'=>$this->pql()->test->one(),
 			'testB'=>$this->pql()->testB->one(),
 
-		/**
-		 * @todo
-		 */
 			// связанный объект
-			//'test'=>$this->pql()->testB->one()->test,
+			'test'=>$this->pql()->testB->one()->test,
 		);
 	}
 	

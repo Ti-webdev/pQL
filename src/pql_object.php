@@ -12,9 +12,7 @@ abstract class pQL_Object {
 	}
 	
 	
-	function getModel() {
-		return get_class($this);
-	}
+	abstract function getModel();
 
 
 	protected function getToStringField() {
@@ -60,8 +58,40 @@ abstract class pQL_Object {
 
 
 	function get($property) {
-		if (array_key_exists($property, $this->newProperties)) return $this->newProperties[$property];
-		return $this->properties[$property];
+		$found = false;
+
+		// ищем в новых свойствах
+		if (array_key_exists($property, $this->newProperties)) {
+			$result = $this->newProperties[$property];
+			$found = true;
+		}
+		// и в текущих
+		elseif (array_key_exists($property, $this->properties)) {
+			$result = $this->properties[$property];
+			$found = true;
+		}
+
+		// если это связанный объект - получаем его
+		if (!($found and is_object($result)) and $this->isPropertyObject($property)) {
+			// если найдено свойство, значит id определен
+			if ($found) {
+				$result = $this->getDriver()->getObjectProperty($this, $property, $result);
+			} 
+			// иначе нужно его загрузить
+			else {
+				$result = $this->getDriver()->loadObjectProperty($this, $property);
+			}
+			$found = is_object($result);
+		}
+
+		if (!$found) throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
+
+		return $result;
+	}
+
+
+	private function isPropertyObject($property) {
+		return $this->getDriver()->isObjectProperty($this->getModel(), $property);
 	}
 
 

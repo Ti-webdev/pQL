@@ -42,7 +42,7 @@ final class pQL_Translator {
 	}
 	
 	
-	function tableToClass($table) {
+	function tableToModel($table) {
 		$result = $this->removeDbQuotes($table);
 		if (0 === strcasecmp(substr($result, 0, strlen($this->tablePrefix)), $this->tablePrefix)) {
 			$result = substr($result, strlen($this->tablePrefix));
@@ -51,7 +51,7 @@ final class pQL_Translator {
 	}
 	 
 
-	function classToTable($className, $addQuotes = true) {
+	function modelToTable($className, $addQuotes = true) {
 		$result = $this->getTableCoding()->toDb($className);
 		$result = $this->tablePrefix.$result;
 		if ($addQuotes) $result = $this->addDbQuotes($result);
