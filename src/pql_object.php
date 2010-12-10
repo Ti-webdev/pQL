@@ -12,18 +12,18 @@ abstract class pQL_Object {
 	}
 	
 	
-	function getClass() {
+	function getModel() {
 		return get_class($this);
 	}
-	
-	
+
+
 	protected function getToStringField() {
-		return $this->getDriver()->getToStringField($this->getClass());
+		return $this->getDriver()->getToStringField($this->getModel());
 	}
 
 
 	function save() {
-		$result = $this->getDriver()->save($this->getClass(), $this->newProperties, $this->properties);
+		$result = $this->getDriver()->save($this->getModel(), $this->newProperties, $this->properties);
 		$this->properties = array_merge($this->properties, $result);
 		$this->newProperties = array();
 		return $this;
@@ -31,7 +31,7 @@ abstract class pQL_Object {
 	
 	
 	function delete() {
-		$newProperties = $this->getDriver()->delete($this->getClass(), $this->newProperties, $this->properties);
+		$newProperties = $this->getDriver()->delete($this->getModel(), $this->newProperties, $this->properties);
 		$this->properties = array();
 		$this->newProperties = $newProperties;
 		return $this;

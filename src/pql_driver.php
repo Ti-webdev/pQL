@@ -36,6 +36,18 @@ abstract class pQL_Driver {
 	final function setPql(pQL $pQL) {
 		$this->pQL = $pQL;
 	}
+	
+	
+	private $definer;
+	final function setObjectDefinder(pQL_Object_Definer_Interface $definer) {
+		$this->definer = $definer;
+	}
+	
+	
+	final function getObjectDefinder() {
+		if (!$this->definer) $this->definer = new pQL_Object_Definer_ClassName;
+		return $this->definer;
+	}
 
 
 	/**
@@ -59,7 +71,7 @@ abstract class pQL_Driver {
 
 	private function getPqlId(pQL_Object $object) {
 		$tr = $this->getTranslator();
-		$foreignTable = $tr->classToTable($object->getClass());
+		$foreignTable = $tr->classToTable($object->getModel());
 		$foreignKey = $this->getTablePrimaryKey($foreignTable);
 		return $object->get($tr->fieldToProperty($foreignKey));
 	}
@@ -112,8 +124,10 @@ abstract class pQL_Driver {
 	abstract protected function deleteByPk($table, $value);
 
 
-	final function getObject($class, $properties = array()) {
-		return new pQL_Object_Simple($this->pQL, $properties, $class);
+	final function getObject($className, $properties = array()) {
+		$result = $this->getObjectDefinder()->getObject($this->pQL, $className, $properties);
+		if (is_object($result) and $result instanceof pQL_Object) return $result;
+		throw new pQL_Object_Definer_Exception('Invalid object type: require pQL_Object instance!');
 	}
 
 
