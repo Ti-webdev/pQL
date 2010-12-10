@@ -130,7 +130,7 @@ final class pQL_Query_Mediator {
 
 		$table = $this->valueTable ? $this->valueTable : $this->firstTable;
 		$driver->joinTable($this, $table);
-		$className = $driver->tableToClass($table->getName());
+		$className = $driver->tableToModel($table->getName());
 		$keys = $driver->getQueryPropertiesKeys($this, $table);
 		$this->iterator->setValueClass($className, $keys);
 	}
@@ -157,7 +157,7 @@ final class pQL_Query_Mediator {
 			$table = $bind[1];
 
 			$driver->joinTable($this, $table);
-			$className = $driver->tableToClass($table->getName());
+			$className = $driver->tableToModel($table->getName());
 
 			$keys = $driver->getQueryPropertiesKeys($this, $table);
 			$this->iterator->bindValueObject($var, $className, $keys);

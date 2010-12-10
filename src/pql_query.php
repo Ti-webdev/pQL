@@ -340,7 +340,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @param string $className
 	 */
 	private function setTable($className) {
-		$name = $this->driver->classToTable($className);
+		$name = $this->driver->modelToTable($className);
 		$this->field = null;
 		$this->table = $this->builder->registerTable($name);
 		$this->mediator->setTable($this->table);

@@ -6,7 +6,7 @@
  */
 final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	function getToStringField($class) {
-		$table = $this->getTranslator()->classToTable($class);
+		$table = $this->getTranslator()->modelToTable($class);
 		$result = null;
 		foreach($this->getDbh()->query("PRAGMA table_info($table)", PDO::FETCH_ASSOC) as $column) {
 			$isString = preg_match('#^(text|char|varchar)#i', $column['type']);
@@ -36,7 +36,9 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	function getTableFields($table) {
 		$q = $this->getDbh()->query("PRAGMA table_info($table)");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
-		return $q;
+		$result = array();
+		foreach ($q as $field) $result[] = $this->getTranslator()->addDbQuotes($field);
+		return $result;
 	}
 
 
@@ -44,5 +46,14 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 		$mediator->setup($this);
 		$sql = 'SELECT COUNT(*)'.$mediator->getBuilder()->getSQLSuffix($this);
 		return $this->getDbh()->query($sql)->fetchColumn(0);
+	}
+	
+	
+	protected function getTables() {
+		$result = array();
+		$sth = $this->getDbh()->query("SELECT tbl_name FROM sqlite_master WHERE type = 'table'");
+		$sth->setFetchMode(PDO::FETCH_COLUMN, 0);
+		foreach($sth as $table) $result[] = $this->getTranslator()->addDbQuotes($table);
+		return $result;
 	}
 }

@@ -12,7 +12,7 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 
 
 	function getToStringField($class) {
-		$table = $this->classToTable($class);
+		$table = $this->modelToTable($class);
 		$result = null;
 		foreach($this->getDbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
 			$isString = preg_match('#^(text|char|varchar)#', $column['Type']);
@@ -43,7 +43,9 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	function getTableFields($table) {
 		$q = $this->getDbh()->query("SHOW COLUMNS FROM $table");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 0);
-		return $q;
+		$result = array();
+		foreach ($q as $field) $result[] = $this->getTranslator()->addDbQuotes($field);
+		return $result;
 	}
 
 
@@ -59,5 +61,14 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 
 	function getNotNullExpr($expr) {
 		return "$expr IS NOT NULL";
+	}
+	
+	
+	protected function getTables() {
+		$result = array();
+		$sth = $this->getDbh()->query("SHOW TABLES");
+		$sth->setFetchMode(PDO::FETCH_COLUMN, 0);
+		foreach($sth as $table) $result[] = $this->getTranslator()->addDbQuotes($table);
+		return $result;
 	}
 }
