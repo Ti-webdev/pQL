@@ -1,7 +1,26 @@
 <?php
-class pQL_Object_Test extends pQL_Object {
+class pQL_Driver_Test_Object extends pQL_Object_Model {
 	
 }
+
+
+abstract class pQL_Driver_Test_Object_Abstract extends pQL_Object {
+	function getModel() {
+		return substr(get_class($this), strlen('pQL_Driver_Test_'));
+	}
+}
+
+
+class pQL_Driver_Test_Object_Definer implements pQL_Object_Definer_Interface {
+	function getObject(pQL $pQL, $className, $properties) {
+		$resultClass = 'pQL_Driver_Test_'.ucfirst($className);
+		if (!class_exists($resultClass)) {
+			eval("class $resultClass extends pQL_Driver_Test_Object_Abstract {}");
+		}
+		return new $resultClass($pQL, $properties, $className);
+	}
+}
+
 
 abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	function __destruct() {
@@ -661,5 +680,113 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(1, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
 		$object->delete();
 		$this->assertEquals(0, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
+	}
+	
+	
+	private function getClassNameTestResultObjects() {
+		return array(
+			// новый объект
+			'test'=>$this->pql()->test(),
+			'testB'=>$this->pql()->testB(),
+			
+			// полученный объект
+			'test'=>$this->pql()->test->one(),
+			'testB'=>$this->pql()->testB->one(),
+
+		/**
+		 * @todo
+		 */
+			// связанный объект
+			//'test'=>$this->pql()->testB->one()->test,
+		);
+	}
+	
+	
+	function testResultClassName() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
+		// записи
+		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($id, 'b_first')");
+		$id = $this->lastInsertId();
+		
+		$this->pql->coding(new pQL_Coding_Typical);
+		
+		$orgClassName = $this->pql->className();
+
+		foreach($this->getClassNameTestResultObjects() as $object) {
+			// проверяем что является pQL_Object
+			$this->assertType('pQL_Object', $object);
+			// и не является нашим классом
+			$this->assertNotType('pQL_Driver_Test_Object', $object);
+		}
+
+		// меняем на наш класс
+		$this->pql->className('pQL_Driver_Test_Object');
+		foreach($this->getClassNameTestResultObjects() as $a) {
+			$this->assertType('pQL_Object', $a);
+			$this->assertType('pQL_Driver_Test_Object', $a);
+		}
+
+		// восстанавливаем
+		$this->pql->className($orgClassName);
+		foreach($this->getClassNameTestResultObjects() as $object) {
+			// проверяем что является pQL_Object
+			$this->assertType('pQL_Object', $object);
+			// и не является нашим классом
+			$this->assertNotType('pQL_Driver_Test_Object', $object);
+		}
+
+		// меняем на наш загрузчик классов
+		$this->pql->objectDefinder(new pQL_Driver_Test_Object_Definer);
+		foreach($this->getClassNameTestResultObjects() as $model=>$object) {
+			$className = 'pQL_Driver_Test_'.ucfirst($model);
+			$this->assertType($className, $object);
+		}
+		
+		$this->exec("DROP TABLE pql_test_b");
+	}
+	
+	
+	function testObjectDefinerWrongClassName() {
+		// пробуем неправильный класс
+		try {
+			$this->pql->className('stdClass');
+			$this->assertFalse(true, 'Expected exception pQL_Object_Definer_Exception');
+		}
+		catch (pQL_Object_Definer_Exception $e) {
+			
+		}
+		
+		// ничего не поломалось? 
+		$this->pql()->test();
+	}
+	
+	
+	function testObjectDefinerInterface() {
+		// проверяем работу интерфейса pQL_Object_Definer_Interface
+		$definer = $this->getMock('pQL_Object_Definer_Interface', array('getObject'));
+		$definer->expects($this->once())
+			->method('getObject')
+			->with($this->equalTo($this->pql), $this->equalTo('test'), array())
+			->will($this->returnValue(new pQL_Object_Model($this->pql, array(), 'test')));
+		$this->pql->objectDefinder($definer);
+		$this->pql()->test();
+	}
+	
+	
+	function testObjectDefinerWrongObject() {
+		// а если определитель объектов вернет неправильный класс?
+		$definer = $this->getMock('pQL_Object_Definer_Interface', array('getObject'));
+		$definer->expects($this->once())
+			->method('getObject')
+			->with($this->equalTo($this->pql), $this->equalTo('test'), array())
+			->will($this->returnValue(new stdClass));
+		$this->pql->objectDefinder($definer);
+		$this->setExpectedException('pQL_Object_Definer_Exception');
+		$this->pql()->test();
 	}
 }

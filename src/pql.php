@@ -94,4 +94,29 @@ final class pQL {
 		$this->translator->setFieldCoding($coding);
 		return $this;
 	}
+	
+	
+	function objectDefinder($definder = null) {
+		// get
+		if (is_null($definder)) return $this->driver()->getObjectDefinder();
+
+		// set
+		$this->driver()->setObjectDefinder($definder);
+		return $this;
+	}
+
+
+	function className($newClassName = null) {
+		// get
+		if (is_null($newClassName)) {
+			$definer = $this->driver()->getObjectDefinder();
+			if ($definer instanceof pQL_Object_Definer_ClassName) return $definer->getClassName();
+			return null;
+		}
+
+		// set
+		$this->objectDefinder(new pQL_Object_Definer_ClassName($newClassName));
+
+		return $this;
+	}
 }
