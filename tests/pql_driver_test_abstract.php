@@ -724,12 +724,12 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
 		// записи
 		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		
 		$id = $this->lastInsertId();
 		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES($id, 'b_first')");
 		$id = $this->lastInsertId();
 		
 		$this->pql->coding(new pQL_Coding_Typical);
-		
 		$orgClassName = $this->pql->className();
 
 		foreach($this->getClassNameTestResultObjects() as $object) {
@@ -804,4 +804,43 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->setExpectedException('pQL_Object_Definer_Exception');
 		$this->pql()->test();
 	}
+	
+	
+	function testJoinUsingThirdTable() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_c");
+		$this->exec("DROP TABLE IF EXISTS pql_test_d");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_a_id INT)");
+		$this->exec("CREATE TABLE pql_test_c(id ".$this->getPKExpr().", val VARCHAR(255), test_b_id INT)");
+		$this->exec("CREATE TABLE pql_test_d(id ".$this->getPKExpr().", val VARCHAR(255), test_c_id INT)");
+		// записи
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('first')");
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('last')");
+		
+		$this->exec("INSERT INTO pql_test_b(test_a_id, val) VALUES($id, 'b_second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_c(test_b_id, val) VALUES($id, 'c_second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_d(test_c_id, val) VALUES($id, 'd_second')");
+		$id = $this->lastInsertId();
+		
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$val = $this->pql()->testD->val->in('d_second')->db()->testA->val->one();
+		$this->assertEquals('second', $val);
+
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_c");
+		$this->exec("DROP TABLE IF EXISTS pql_test_d");
+	}
+	
+	
+	// todo:
+	// testJoinUsingForeingKey
 }

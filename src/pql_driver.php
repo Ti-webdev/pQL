@@ -216,34 +216,138 @@ abstract class pQL_Driver {
 	 * @param pQL_Query_Mediator $mediator
 	 * @param pQL_Query_Builder_Table $table
 	 */
-	function joinTable(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
+	final function joinTable(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $joinTable) {
 		$builder = $mediator->getBuilder();
 
 		// талбица уже в запросе
-		if ($builder->tableExists($table)) return;
+		if ($builder->tableExists($joinTable)) return;
 
-		$tables = $builder->getFromTables();
+		$queryTables = $builder->getFromTables();
 
 		// нет таблиц в запросе - не нужно объединять
-		if (count($tables) < 1) {
-			$builder->addTable($table);
+		if (count($queryTables) < 1) {
+			$builder->addTable($joinTable);
 			return;
 		}
 
+		// Получаем цепочку таблиц для объединения
+		$tables = array();
+		foreach ($queryTables as $table) $tables[] = $table->getName();
+		$path = $this->getJoinTablesPath($tables, $joinTable->getName());
+		if (!$path) throw new pQL_Query_Exception_Join('Cannot join table: '.$joinTable->getName());
 
-		// Ищем таблицу с которой можно объедениться
-		foreach($tables as $joinTable) {
-			$joinFields = $this->getJoinTableFields($table->getName(), $joinTable->getName());
+		foreach($path as $join) {
+			// объединяем таблицы
+			$table1 = $builder->registerTable($join['table1']);
+			$expr = $builder->getTableAlias($table1).'.'.$join['field1'];
+			
+			$expr .= ' = ';
+
+			$table2 = $builder->registerTable($join['table2']);
+			$expr .= $builder->getTableAlias($table2).'.'.$join['field2'];
+			$builder->addWhere($expr);
+		}
+	}
+	
+	
+	const JOIN_INDIRECT_LIMIT = 100000;
+	private function getJoinTablesPath($tables, $joinTable) {
+		// Связь A-A
+		// каждую таблицу из запроса пробуем соединить с joinTable
+		foreach($tables as $table) {
+			$joinFields = $this->getJoinTableFields($table, $joinTable);
 			if ($joinFields) {
-				// нашли - объединяем
-				list($fieldA, $fieldB) = $joinFields;
-				$expr = $builder->getTableAlias($table).'.'.$fieldA;
-				$expr .= ' = ';
-				$expr .= $builder->getTableAlias($joinTable).'.'.$fieldB;
-				$builder->addWhere($expr);
-				return;
+				// возращаем рузультат
+				return array(
+					array(
+						'table1'=>$table,
+						'field1'=>$joinFields[0],
+						'table2'=>$joinTable,
+						'field2'=>$joinFields[1],
+					)
+				);
 			}
 		}
+
+		// Связь A-...-Z
+		// Ищем сначала вложенность второго уровня A-B-C
+		// потом третьего уровня A-B-C-D
+		// и так далее
+		//
+		// не используется рекурсия что бы уменьшить количество связей в результате
+		// рекурсия может пойти по "длинному пути"
+		$allTables = $this->getTables();
+		$childPathes = array(
+			array($tables, array()),
+		);
+		$level = 0;
+		// path (путь) - набор объеденяемых с запросом таблиц
+		// пока есть какие-либо связи A-B-* и вложенность меньше числа таблиц
+		while($childPathes and $level < count($allTables)) {
+			// переходим на вложенность ниже
+			$level++;
+			$parentPathes = $childPathes; // дети становятся родителями
+			$childPathes = array();
+			$count = 0;
+
+			// для каждого родителя
+			foreach($parentPathes as $parentPath) {
+				list($tables, $join) = $parentPath;
+				
+				// каждую таблицу из базы пробуем соединить с таблицей из пути
+				foreach($allTables as $noQueryTable) {
+					// если таблица уже в пути - пропускам
+					if (in_array($noQueryTable, $tables)) continue;
+					
+					// нет смысла
+					if ($joinTable == $noQueryTable) continue;
+					
+					// пробуем соединить A-B
+					foreach($tables as $queryTable) {
+						$joinFields = $this->getJoinTableFields($queryTable, $noQueryTable);
+						
+						// не соединяются - следуюзщий
+						if (!$joinFields) continue;
+
+						// соединяюются
+						
+						$join[] = array(
+							'table1'=>$queryTable,
+							'field1'=>$joinFields[0],
+							'table2'=>$noQueryTable,
+							'field2'=>$joinFields[1],
+						);
+						
+						// Связь A-B-C
+						// пробуем содинить "B" с "C"
+						$joinFields = $this->getJoinTableFields($noQueryTable, $joinTable);
+						
+						// получилось - возращаем путь
+						if ($joinFields) {
+							$join[] = array(
+								'table1'=>$noQueryTable,
+								'field1'=>$joinFields[0],
+								'table2'=>$joinTable,
+								'field2'=>$joinFields[1],
+							);
+							return $join;
+						}
+		
+						
+						// иначе добавляем таблицу "B" в путь
+						$path = $tables;
+						$path[] = $noQueryTable;
+						
+						// если слишком много - перкращаем
+						$count += count($path);
+						if (self::JOIN_INDIRECT_LIMIT < $count) break(3);
+
+						$childPathes[] = array($path, $join);
+					}
+				}
+			}
+		}
+		return array();
 	}
 
 
@@ -263,7 +367,7 @@ abstract class pQL_Driver {
 		$fieldA = $this->getJoinSecondTableFieldToFirstTable($tableB, $tableA);
 		if ($fieldA) return array($fieldA, $this->getTablePrimaryKey($tableB));
 
-		return;
+		return null;
 	}
 
 
@@ -275,7 +379,7 @@ abstract class pQL_Driver {
 		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
 		foreach($this->getTableFields($tableB) as $fieldB) {
 			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
-			$tableASuffix = substr($tableNameA, strlen($fieldBSuffix));
+			$tableASuffix = substr($tableNameA, -strlen($fieldBSuffix));
 			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
 		}
 		return null;
