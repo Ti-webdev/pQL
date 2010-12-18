@@ -72,4 +72,72 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 	protected function getPKExpr() {
 		return 'INTEGER PRIMARY KEY';
 	}
+	
+	
+	function testJoinUsingForeingKey() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_d");
+		$this->exec("DROP TABLE IF EXISTS pql_test_c");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(i ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_a(i))");
+		$this->exec("CREATE TABLE pql_test_c(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_b(i))");
+		$this->exec("CREATE TABLE pql_test_d(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_c(i))");
+		
+		// записи
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('first')");
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('last')");
+		
+		$this->exec("INSERT INTO pql_test_b(f, val) VALUES($id, 'b_second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_c(f, val) VALUES($id, 'c_second')");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_d(f, val) VALUES($id, 'd_second')");
+		$id = $this->lastInsertId();
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$val = $this->pql()->testD->val->in('d_second')->db()->testA->val->one();
+		$this->assertEquals('second', $val);
+		
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_d");
+		$this->exec("DROP TABLE IF EXISTS pql_test_c");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
+	
+	
+	function testJoinUsingTwoColumnForeingKey() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+		
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(aa VARCHAR(255), ab VARCHAR(255), ac VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(ba VARCHAR(255), bb VARCHAR(255), bc VARCHAR(255), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac))");
+		
+		// записи
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_first', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second1', 'ab_second', 'ac_second1')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_last', 'ab_last', 'ac_last')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba1', 'bb1', 'bc1')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba3', 'bb3', 'bc3')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$val = $this->pql()->testB->ba->in('ba2')->db()->testA->aa->one();
+		$this->assertEquals('aa_second2', $val);
+		
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
 }

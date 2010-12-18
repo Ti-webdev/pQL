@@ -238,18 +238,24 @@ abstract class pQL_Driver {
 
 		foreach($path as $join) {
 			// объединяем таблицы
-			$table1 = $builder->registerTable($join['table1']);
-			$expr = $builder->getTableAlias($table1).'.'.$join['field1'];
+			$fields1 = reset($join);
+			$table1 = $builder->registerTable(key($join));
+			$alias1 = $builder->getTableAlias($table1);
 			
-			$expr .= ' = ';
-
-			$table2 = $builder->registerTable($join['table2']);
-			$expr .= $builder->getTableAlias($table2).'.'.$join['field2'];
-			$builder->addWhere($expr);
+			$fields2 = next($join);
+			$table2 = $builder->registerTable(key($join));
+			$alias2 = $builder->getTableAlias($table2);
+			
+			foreach($fields1 as $i=>$field1) {
+				$expr = $alias1.'.'.$field1;
+				$expr .= ' = ';
+				$expr .= $alias2.'.'.$fields2[$i];
+				$builder->addWhere($expr);
+			}
 		}
 	}
-	
-	
+
+
 	const JOIN_INDIRECT_LIMIT = 100000;
 	private function getJoinTablesPath($tables, $joinTable) {
 		// Связь A-A
@@ -260,10 +266,8 @@ abstract class pQL_Driver {
 				// возращаем рузультат
 				return array(
 					array(
-						'table1'=>$table,
-						'field1'=>$joinFields[0],
-						'table2'=>$joinTable,
-						'field2'=>$joinFields[1],
+						$table=>$joinFields[0],
+						$joinTable=>$joinFields[1],
 					)
 				);
 			}
@@ -312,10 +316,8 @@ abstract class pQL_Driver {
 						// соединяюются
 						
 						$join[] = array(
-							'table1'=>$queryTable,
-							'field1'=>$joinFields[0],
-							'table2'=>$noQueryTable,
-							'field2'=>$joinFields[1],
+							$queryTable=>$joinFields[0],
+							$noQueryTable=>$joinFields[1],
 						);
 						
 						// Связь A-B-C
@@ -325,10 +327,8 @@ abstract class pQL_Driver {
 						// получилось - возращаем путь
 						if ($joinFields) {
 							$join[] = array(
-								'table1'=>$noQueryTable,
-								'field1'=>$joinFields[0],
-								'table2'=>$joinTable,
-								'field2'=>$joinFields[1],
+								$noQueryTable=>$joinFields[0],
+								$joinTable=>$joinFields[1],
 							);
 							return $join;
 						}
@@ -352,23 +352,34 @@ abstract class pQL_Driver {
 
 
 	/**
-	 * Возращает два поля по которым возможно объединение таблиц
+	 * Возращает список полей по которым возможно объединение таблиц
 	 * Если объединение не возможно возращает NULL
 	 * 
 	 * @param string $tableA
 	 * @param string $tableB
-	 * @return array | null
+	 * @return array(array tableAFields, array tableBFields) | null
 	 */
 	private function getJoinTableFields($tableA, $tableB) {
+		// using REFERENCES
+		foreach($this->getForeignKeys($tableA) as $key) {
+			if (0 === strcasecmp($tableB, $key['table'])) return array($key['from'], $key['to']); 
+		}
+		foreach($this->getForeignKeys($tableB) as $key) {
+			if (0 === strcasecmp($tableA, $key['table'])) return array($key['to'], $key['from']);
+		}
+		
+		// using names
 		$fieldB = $this->getJoinSecondTableFieldToFirstTable($tableA, $tableB);
-
-		if ($fieldB) return array($this->getTablePrimaryKey($tableA), $fieldB);
+		if ($fieldB) return array(array($this->getTablePrimaryKey($tableA)), array($fieldB));
 
 		$fieldA = $this->getJoinSecondTableFieldToFirstTable($tableB, $tableA);
-		if ($fieldA) return array($fieldA, $this->getTablePrimaryKey($tableB));
+		if ($fieldA) return array(array($fieldA), array($this->getTablePrimaryKey($tableB)));
 
 		return null;
 	}
+	
+	
+	abstract protected function getForeignKeys($table);
 
 
 	/**

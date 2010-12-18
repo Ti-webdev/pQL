@@ -50,10 +50,31 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	
 	
 	protected function getTables() {
-		$result = array();
 		$sth = $this->getDbh()->query("SELECT tbl_name FROM sqlite_master WHERE type = 'table'");
 		$sth->setFetchMode(PDO::FETCH_COLUMN, 0);
+		$result = array();
 		foreach($sth as $table) $result[] = $this->getTranslator()->addDbQuotes($table);
+		return $result;
+	}
+	
+	
+	protected function getForeignKeys($table) {
+		$sth = $this->getDbh()->query("PRAGMA foreign_key_list($table)");
+		$sth->setFetchMode(PDO::FETCH_ASSOC);
+		$result = array();
+		$tr = $this->getTranslator();
+		foreach($sth as $key) {
+			$i = intval($key['id']);
+			if (!isset($result[$i])) {
+				$result[$i] = array(
+					'table'=>$tr->addDbQuotes($key['table']),
+					'from'=>array(),
+					'to'=>array(),
+				);
+			}
+			$result[$i]['from'][] = $tr->addDbQuotes($key['from']);
+			$result[$i]['to'][] = $tr->addDbQuotes($key['to']);
+		}
 		return $result;
 	}
 }

@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Driver_MySQL_QueryIterator implements SeekableIterator, Countable {
+class pQL_Driver_MySQL_Query_Iterator implements SeekableIterator, Countable {
 	private $query;
 	private $current;
 	private $key;

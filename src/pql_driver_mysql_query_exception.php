@@ -3,7 +3,7 @@
  * @author Ti
  * @package pQL
  */
-class pQL_Driver_MySQL_QueryException extends pQL_Exception {
+class pQL_Driver_MySQL_Query_Exception extends pQL_Exception {
 	private $query;
 
 

@@ -21,7 +21,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	private function query($query) {
 		$result = is_null($this->db) ? mysql_query($query) : mysql_query($query, $this->db);
-		if (!$result) throw new pQL_Driver_MySQL_QueryException(mysql_error(), mysql_errno(), $query);
+		if (!$result) throw new pQL_Driver_MySQL_Query_Exception(mysql_error(), mysql_errno(), $query);
 		return $result;
 	}
 
@@ -132,7 +132,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	function getQueryIterator(pQL_Query_Mediator $mediator) {
 		$handle = $mediator->getQueryHandler($this);
-		return new pQL_Driver_MySQL_QueryIterator($handle);
+		return new pQL_Driver_MySQL_Query_Iterator($handle);
 	}
 
 
@@ -155,11 +155,17 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	function getParam($val) {
 		return $this->quote($val);
 	}
-	
+
+
 	protected function getTables() {
 		$query = $this->query("SHOW TABLES");
 		$result = array();
 		while($row = mysql_fetch_row($query)) $result[] = $this->getTranslator()->addDbQuotes(reset($row));
 		return $result;
+	}
+
+
+	protected function getForeignKeys($table) {
+		return array();
 	}
 }

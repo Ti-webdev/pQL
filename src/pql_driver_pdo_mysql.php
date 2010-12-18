@@ -71,4 +71,9 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		foreach($sth as $table) $result[] = $this->getTranslator()->addDbQuotes($table);
 		return $result;
 	}
+	
+	
+	protected function getForeignKeys($table) {
+		return array();
+	}
 }
