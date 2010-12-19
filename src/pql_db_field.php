@@ -1,21 +1,21 @@
 <?php
 class pQL_Db_Field {
 	private $name;
-	private $isPk;
+	private $isPrimaryKey;
 
 
-	function __construct($name, $isPk) {
+	function __construct($name, $isPrimaryKey) {
 		$this->name = $name;
-		$this->isPk = $isPk;
+		$this->isPrimaryKey = $isPrimaryKey;
 	}
-	
-	
+
+
 	function getName() {
 		return $this->name;
 	}
 
 
-	function isPk() {
-		return $this->isPk;
+	function isPrimaryKey() {
+		return $this->isPrimaryKey;
 	}
 }

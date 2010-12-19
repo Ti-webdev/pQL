@@ -119,8 +119,14 @@ final class pQL {
 
 		return $this;
 	}
-	
-	
+
+
+	function clearCache() {
+		if ($this->cache) $this->cache->clear();
+		return $this;
+	}
+
+
 	private $cache;
 	function cache($newCache = null) {
 		// get

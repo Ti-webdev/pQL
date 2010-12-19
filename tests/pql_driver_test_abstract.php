@@ -513,6 +513,8 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($val, $this->queryValue("SELECT val FROM pql_test WHERE val = '$val'"));
 		$this->assertEquals($id, $object->id);
 		$this->assertEquals($val, $this->pql()->test($id)->val);
+
+		$this->pql->clearCache();
 		
 		// custom id field
 		$this->exec("DROP TABLE pql_test");

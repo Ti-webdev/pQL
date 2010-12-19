@@ -42,25 +42,12 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	protected function getTablePrimaryKey($table) {
-		$result = null;
-		$Q = $this->query("SHOW COLUMNS FROM $table");
-		while($column = mysql_fetch_assoc($Q)) {
-			$isPK = 'PRI' == $column['Key'];
-			if ($isPK) { //  or is_nulL($result)
-				$result = $column['Field'];
-				if ($isPK) break;
-			}
-		}
-		if ($result) return $this->getTranslator()->addDbQuotes($result);
-		return $result;
-	}
-
-
 	protected function getTableFields($table) {
 		$result = array();
 		$Q = $this->query("SHOW COLUMNS FROM $table");
-		while($column = mysql_fetch_row($Q)) $result[] = $this->getTranslator()->addDbQuotes(reset($column));
+		while($column = mysql_fetch_assoc($Q)) {
+			$result[] = new pQL_Db_Field($column['Field'], 'PRI' == $column['Key']);
+		}
 		return $result;
 	}
 	

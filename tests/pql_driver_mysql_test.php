@@ -36,6 +36,8 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$this->assertEquals($id, $object->id);
 		$this->assertTrue($object instanceof pQL_Object);
 		
+		$this->pql->clearCache();
+		
 		// несколько записей
 		$this->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->exec("INSERT INTO pql_test VALUES(NULL)");
@@ -44,6 +46,7 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$this->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->assertEquals($id, $this->pql()->test($id)->id);
 		
+		$this->pql->clearCache();
 
 		// custom pk
 		$val = md5(microtime(true));
@@ -51,6 +54,8 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$this->exec("CREATE TABLE pql_test(first_col INT, val VARCHAR(32) PRIMARY KEY, last_col INT)");
 		$this->exec("INSERT INTO pql_test VALUES(null, '$val', null)");
 		$this->assertEquals($val, $this->pql()->test($val)->val);
+		
+		$this->pql->clearCache();
 
 		// any pk
 		$this->exec('ALTER TABLE `pql_test` CHANGE `val` `and` VARCHAR( 32 ) NOT NULL');

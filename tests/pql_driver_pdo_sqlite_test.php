@@ -36,6 +36,8 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->assertEquals($id, $object->id);
 		$this->assertTrue($object instanceof pQL_Object);
 		
+		$this->pql->clearCache();
+		
 		// несколько записей
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
@@ -43,6 +45,8 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->assertEquals($id, $this->pql()->test($id)->id);
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->assertEquals($id, $this->pql()->test($id)->id);
+		
+		$this->pql->clearCache();
 
 		// custom pk
 		$val = md5(microtime(true));

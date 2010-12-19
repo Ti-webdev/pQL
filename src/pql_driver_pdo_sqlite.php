@@ -20,24 +20,13 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 	}
 
 
-	protected function getTablePrimaryKey($table) {
-		$result = null;
-		foreach($this->getDbh()->query("PRAGMA table_info($table)", PDO::FETCH_ASSOC) as $column) {
-			$isPK = (bool) $column['pk'];
-			if ($isPK) { // or is_nulL($result)
-				$result = $column['name'];
-				if ($isPK) break;
-			}
-		}
-		return $result;
-	}
-
-
 	protected function getTableFields($table) {
 		$q = $this->getDbh()->query("PRAGMA table_info($table)");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
 		$result = array();
-		foreach ($q as $field) $result[] = $this->getTranslator()->addDbQuotes($field);
+		foreach($this->getDbh()->query("PRAGMA table_info($table)", PDO::FETCH_ASSOC) as $column) {
+			$result[] = new pQL_Db_Field($column['name'], (bool) $column['pk']);
+		}
 		return $result;
 	}
 

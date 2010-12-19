@@ -146,7 +146,14 @@ abstract class pQL_Driver {
 	 * @param string $table
 	 * @return string
 	 */
-	abstract protected function getTablePrimaryKey($table);
+
+
+	protected final function getTablePrimaryKey($table) {
+		foreach($this->getFieldsCached($table) as $field) {
+			if ($field->isPrimaryKey()) return $this->getTranslator()->addDbQuotes($field->getName());
+		}
+		return null;
+	}
 
 
 	/**
@@ -392,6 +399,13 @@ abstract class pQL_Driver {
 		if (!$cache->exists()) $cache->set($this->getTableFields($table));
 		return $cache->get();	
 	}
+	
+	
+	private function getFieldsCachedNames($table) {
+		$result = array();
+		foreach($this->getFieldsCached($table) as $field) $result[] = $this->getTranslator()->addDbQuotes($field->getName());
+		return $result;
+	}
 
 
 	/**
@@ -400,7 +414,7 @@ abstract class pQL_Driver {
 	 */
 	private function getJoinSecondTableFieldToFirstTable($tableA, $tableB) {
 		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
-		foreach($this->getFieldsCached($tableB) as $fieldB) {
+		foreach($this->getFieldsCachedNames($tableB) as $fieldB) {
 			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
 			$tableASuffix = substr($tableNameA, -strlen($fieldBSuffix));
 			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
@@ -412,7 +426,7 @@ abstract class pQL_Driver {
 	final function getQueryPropertiesKeys(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
 		$result = array();
 		$builder = $mediator->getBuilder();
-		foreach($this->getFieldsCached($table->getName()) as $fieldName) {
+		foreach($this->getFieldsCachedNames($table->getName()) as $fieldName) {
 			$field = $builder->registerField($table, $fieldName);
 			$num = $builder->getFieldNum($field);
 			$result[$num] = $this->fieldToProperty($field->getName());
@@ -433,7 +447,7 @@ abstract class pQL_Driver {
 
 	private function getModelFields($model) {
 		$table = $this->modelToTable($model);
-		return $this->getFieldsCached($table);
+		return $this->getFieldsCachedNames($table);
 	}
 	
 	
@@ -447,7 +461,7 @@ abstract class pQL_Driver {
 	private function getPropertyForeignField($model, $property) {
 		$field = $this->propertyToField($property);
 		$table = $this->modelToTable($model);
-		$fields = $this->getFieldsCached($table);
+		$fields = $this->getFieldsCachedNames($table);
 		if (in_array($field, $fields)) return null;
 
 		$tr = $this->getTranslator();

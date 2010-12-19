@@ -26,25 +26,12 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	}
 
 
-	protected function getTablePrimaryKey($table) {
-		$result = null;
-		foreach($this->getDbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
-			$isPK = 'PRI' == $column['Key'];
-			if ($isPK) { //  or is_nulL($result)
-				$result = $column['Field'];
-				if ($isPK) break;
-			}
-		}
-		if ($result) return $this->getTranslator()->addDbQuotes($result);
-		return $result;
-	}
-
 
 	protected function getTableFields($table) {
-		$q = $this->getDbh()->query("SHOW COLUMNS FROM $table");
-		$q->setFetchMode(PDO::FETCH_COLUMN, 0);
 		$result = array();
-		foreach ($q as $field) $result[] = $this->getTranslator()->addDbQuotes($field);
+		foreach($this->getDbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
+			$result[] = new pQL_Db_Field($column['Field'], 'PRI' == $column['Key']);
+		}
 		return $result;
 	}
 
