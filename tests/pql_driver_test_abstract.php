@@ -112,11 +112,6 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 
 		$this->assertEquals(30, $cnt);
-
-
-		/**
-		 * @todo fetch foreign object row
-		 */
 	}
 	
 	
@@ -565,20 +560,6 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(0, count($this->pql()->testB->db()->test->val->in('frist', 'last')));
 
 		$this->exec("DROP TABLE pql_test_b");
-	}
-
-
-	function testJoinUsingForeignKey() {
-		/**
-		 * @todo
-		 */
-	}
-
-
-	function testJoinType() {
-		/**
-		 * @todo
-		 */
 	}
 
 

@@ -6,6 +6,7 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$this->db = mysql_connect('localhost', 'test', 'test');
 		mysql_select_db('test', $this->db);
 		$this->tearDown();
+		#$this->exec('SET storage_engine=INNODB');
 	}
 
 

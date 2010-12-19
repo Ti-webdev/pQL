@@ -3,5 +3,6 @@
 - namespace objects
 - countAll() - COUNT(*)
 - к исключению "таблицы(поле) не существует" прикрутить список существующих талбиц(полей)
-- Опционально: автосоздание и модификация таблиц
+- PostgreSQL support
+- Mariadb support
 - Drizzle support (prefomance fork of mysql http://drizzle.org/)

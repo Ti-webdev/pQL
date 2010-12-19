@@ -24,6 +24,11 @@ abstract class pQL_Driver {
 		if (class_exists($class)) return new $class($handle);
 		throw new InvalidArgumentException("Invalid driver type: $type");
 	}
+	
+	
+	private function cache($key) {
+		return new pQL_Cache_Element($this->pQL->cache(), $key);
+	}
 
 
 	private $translator;
@@ -149,7 +154,7 @@ abstract class pQL_Driver {
 	 * @param string $table
 	 * @return array
 	 */
-	abstract function getTableFields($table);
+	abstract protected function getTableFields($table);
 
 
 	/**
@@ -280,7 +285,7 @@ abstract class pQL_Driver {
 		//
 		// не используется рекурсия что бы уменьшить количество связей в результате
 		// рекурсия может пойти по "длинному пути"
-		$allTables = $this->getTables();
+		$allTables = $this->getTablesCached();
 		$childPathes = array(
 			array($tables, array()),
 		);
@@ -380,6 +385,13 @@ abstract class pQL_Driver {
 	
 	
 	abstract protected function getForeignKeys($table);
+	
+	
+	private function getFieldsCached($table) {
+		$cache = $this->cache("f:$table");
+		if (!$cache->exists()) $cache->set($this->getTableFields($table));
+		return $cache->get();	
+	}
 
 
 	/**
@@ -388,7 +400,7 @@ abstract class pQL_Driver {
 	 */
 	private function getJoinSecondTableFieldToFirstTable($tableA, $tableB) {
 		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
-		foreach($this->getTableFields($tableB) as $fieldB) {
+		foreach($this->getFieldsCached($tableB) as $fieldB) {
 			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
 			$tableASuffix = substr($tableNameA, -strlen($fieldBSuffix));
 			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
@@ -400,7 +412,7 @@ abstract class pQL_Driver {
 	final function getQueryPropertiesKeys(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
 		$result = array();
 		$builder = $mediator->getBuilder();
-		foreach($this->getTableFields($table->getName()) as $fieldName) {
+		foreach($this->getFieldsCached($table->getName()) as $fieldName) {
 			$field = $builder->registerField($table, $fieldName);
 			$num = $builder->getFieldNum($field);
 			$result[$num] = $this->fieldToProperty($field->getName());
@@ -412,9 +424,16 @@ abstract class pQL_Driver {
 	abstract protected function getTables();
 	
 	
+	private function getTablesCached() {
+		$cache = $this->cache('tables');
+		if (!$cache->exists()) $cache->set($this->getTables());
+		return $cache->get();
+	}
+
+
 	private function getModelFields($model) {
 		$table = $this->modelToTable($model);
-		return $this->getTableFields($table);
+		return $this->getFieldsCached($table);
 	}
 	
 	
@@ -428,7 +447,7 @@ abstract class pQL_Driver {
 	private function getPropertyForeignField($model, $property) {
 		$field = $this->propertyToField($property);
 		$table = $this->modelToTable($model);
-		$fields = $this->getTableFields($table);
+		$fields = $this->getFieldsCached($table);
 		if (in_array($field, $fields)) return null;
 
 		$tr = $this->getTranslator();
@@ -452,7 +471,7 @@ abstract class pQL_Driver {
 		$field = $this->propertyToField($property);
 		$field = $tr->removeDbQuotes($field);
 
-		foreach($this->getTables() as $quotedTable) {
+		foreach($this->getTablesCached() as $quotedTable) {
 			$table = $tr->removeDbQuotes($quotedTable);
 
 			// если таблица заканчивается названием свойства

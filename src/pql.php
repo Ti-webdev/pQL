@@ -119,4 +119,24 @@ final class pQL {
 
 		return $this;
 	}
+	
+	
+	private $cache;
+	function cache($newCache = null) {
+		// get
+		if (is_null($newCache)) {
+			if (is_null($this->cache)) $this->setCachce(new pQL_Cache_Local);
+			return $this->cache;
+		}
+
+		// set
+		$this->setCachce($newCache);
+
+		return $this;
+	}
+	
+	
+	private function setCachce(pQL_Cache_Interface $newCachce) {
+		$this->cache = $newCachce;
+	}
 }

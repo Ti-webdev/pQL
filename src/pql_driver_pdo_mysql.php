@@ -40,7 +40,7 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	}
 
 
-	function getTableFields($table) {
+	protected function getTableFields($table) {
 		$q = $this->getDbh()->query("SHOW COLUMNS FROM $table");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 0);
 		$result = array();

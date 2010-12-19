@@ -116,11 +116,11 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 	function testJoinUsingTwoColumnForeingKey() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
-		
+	
 		// схема базы
-		$this->exec("CREATE TABLE pql_test_a(aa VARCHAR(255), ab VARCHAR(255), ac VARCHAR(255))");
-		$this->exec("CREATE TABLE pql_test_b(ba VARCHAR(255), bb VARCHAR(255), bc VARCHAR(255), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac))");
-		
+		$this->exec("CREATE TABLE pql_test_a(aa CHAR(16), ab CHAR(16), ac CHAR(16))");
+		$this->exec("CREATE TABLE pql_test_b(ba CHAR(16), bb CHAR(16), bc CHAR(16), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac))");
+
 		// записи
 		$this->exec("INSERT INTO pql_test_a VALUES('aa_first', 'ab_first', 'ac_first')");
 		$this->exec("INSERT INTO pql_test_a VALUES('aa_second1', 'ab_second', 'ac_second1')");

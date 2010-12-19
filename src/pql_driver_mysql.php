@@ -57,7 +57,7 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	function getTableFields($table) {
+	protected function getTableFields($table) {
 		$result = array();
 		$Q = $this->query("SHOW COLUMNS FROM $table");
 		while($column = mysql_fetch_row($Q)) $result[] = $this->getTranslator()->addDbQuotes(reset($column));
