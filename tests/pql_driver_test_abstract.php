@@ -268,6 +268,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			}
 			if (1 !== $found) $this->fail("'$expected': $found results");
 		}
+		
+		unset($vals[2]);
+		$vals = array_values($vals);
+		$this->assertEquals($vals, $this->pql()->test->val->in($vals)->value()->toArray());
 	}
 	
 	
