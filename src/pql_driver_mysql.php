@@ -152,7 +152,51 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
+	private function getDbName() {
+		$cache = $this->cache('dbname');
+		if ($cache->exists()) {
+			$result = $cache->get();
+		}
+		else {
+			$query = $this->query('SELECT DATABASE()');
+			$result = mysql_result($query, 0, 0);
+			$cache->set($result);
+		}
+		return $result;
+	}
+	
+	
+	private function getAllForeignKeys() {
+		$cache = $this->cache('fk');
+		if ($cache->exists()) return $cache->get();
+		$dbName = $this->quote($this->getDbName());
+		$Q = $this->query("SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+			FROM information_schema.KEY_COLUMN_USAGE
+			WHERE CONSTRAINT_SCHEMA = $dbName AND REFERENCED_TABLE_NAME IS NOT NULL
+			ORDER BY TABLE_NAME, REFERENCED_TABLE_NAME, POSITION_IN_UNIQUE_CONSTRAINT");
+		$result = array();
+		$tr = $this->getTranslator();
+		while($R = mysql_fetch_assoc($Q)) {
+			if (!isset($result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']])) {
+				$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']] = array(
+					'table'=>$tr->addDbQuotes($R['REFERENCED_TABLE_NAME']),
+					'from'=>array(),
+					'to'=>array(),
+				);
+			}
+			
+			$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']]['from'][] = $tr->addDbQuotes($R['COLUMN_NAME']);
+			$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']]['to'][] = $tr->addDbQuotes($R['REFERENCED_COLUMN_NAME']);
+		}
+		$cache->set($result);
+		return $result;
+	}
+
+
 	protected function getForeignKeys($table) {
+		$all = $this->getAllForeignKeys();
+		$table = $this->getTranslator()->removeDbQuotes($table);
+		if (isset($all[$table])) return array_values($all[$table]);
 		return array();
 	}
 }

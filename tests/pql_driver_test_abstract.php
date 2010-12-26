@@ -826,4 +826,35 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("DROP TABLE IF EXISTS pql_test_c");
 		$this->exec("DROP TABLE IF EXISTS pql_test_d");
 	}
+	
+	
+	function testJoinUsingTwoColumnForeingKey() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+		
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+	
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(aa CHAR(16), ab CHAR(16), ac CHAR(16), PRIMARY KEY(ab, ac)) $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(ba CHAR(16), bb CHAR(16), bc CHAR(16), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_first', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second1', 'ab_second', 'ac_second1')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_last', 'ab_last', 'ac_last')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba1', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba3', 'ab_first', 'ac_first')");
+		
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$val = $this->pql()->testB->ba->in('ba2')->db()->testA->aa->one();
+		$this->assertEquals('aa_second2', $val);
+		
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
 }

@@ -115,33 +115,4 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	}
-	
-	
-	function testJoinUsingTwoColumnForeingKey() {
-		$this->exec("DROP TABLE IF EXISTS pql_test_b");
-		$this->exec("DROP TABLE IF EXISTS pql_test_a");
-	
-		// схема базы
-		$this->exec("CREATE TABLE pql_test_a(aa CHAR(16), ab CHAR(16), ac CHAR(16))");
-		$this->exec("CREATE TABLE pql_test_b(ba CHAR(16), bb CHAR(16), bc CHAR(16), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac))");
-
-		// записи
-		$this->exec("INSERT INTO pql_test_a VALUES('aa_first', 'ab_first', 'ac_first')");
-		$this->exec("INSERT INTO pql_test_a VALUES('aa_second1', 'ab_second', 'ac_second1')");
-		$this->exec("INSERT INTO pql_test_a VALUES('aa_second2', 'ab_second', 'ac_second2')");
-		$this->exec("INSERT INTO pql_test_a VALUES('aa_last', 'ab_last', 'ac_last')");
-		$this->exec("INSERT INTO pql_test_b VALUES('ba1', 'bb1', 'bc1')");
-		$this->exec("INSERT INTO pql_test_b VALUES('ba2', 'ab_second', 'ac_second2')");
-		$this->exec("INSERT INTO pql_test_b VALUES('ba3', 'bb3', 'bc3')");
-
-		// pql
-		$this->pql->coding(new pQL_Coding_Typical);
-
-		$val = $this->pql()->testB->ba->in('ba2')->db()->testA->aa->one();
-		$this->assertEquals('aa_second2', $val);
-		
-		// tearDown
-		$this->exec("DROP TABLE IF EXISTS pql_test_b");
-		$this->exec("DROP TABLE IF EXISTS pql_test_a");
-	}
 }

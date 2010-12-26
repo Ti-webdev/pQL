@@ -58,9 +58,53 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 		foreach($sth as $table) $result[] = $this->getTranslator()->addDbQuotes($table);
 		return $result;
 	}
+
+
+	private function getDbName() {
+		$cache = $this->cache('dbname');
+		if ($cache->exists()) {
+			$result = $cache->get();
+		}
+		else {
+			$query = $this->getDbh()->query('SELECT DATABASE()');
+			$result = $query->fetchColumn(0);
+			$cache->set($result);
+		}
+		return $result;
+	}
 	
 	
+	private function getAllForeignKeys() {
+		$cache = $this->cache('fk');
+		if ($cache->exists()) return $cache->get();
+		$dbName = $this->getDbh()->quote($this->getDbName());
+		$Q = $this->getDbh()->query("SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+			FROM information_schema.KEY_COLUMN_USAGE
+			WHERE CONSTRAINT_SCHEMA = $dbName AND REFERENCED_TABLE_NAME IS NOT NULL
+			ORDER BY TABLE_NAME, REFERENCED_TABLE_NAME, POSITION_IN_UNIQUE_CONSTRAINT", PDO::FETCH_ASSOC);
+		$result = array();
+		$tr = $this->getTranslator();
+		foreach($Q as $R) {
+			if (!isset($result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']])) {
+				$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']] = array(
+					'table'=>$tr->addDbQuotes($R['REFERENCED_TABLE_NAME']),
+					'from'=>array(),
+					'to'=>array(),
+				);
+			}
+			
+			$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']]['from'][] = $tr->addDbQuotes($R['COLUMN_NAME']);
+			$result[$R['TABLE_NAME']][$R['CONSTRAINT_NAME']]['to'][] = $tr->addDbQuotes($R['REFERENCED_COLUMN_NAME']);
+		}
+		$cache->set($result);
+		return $result;
+	}
+
+
 	protected function getForeignKeys($table) {
+		$all = $this->getAllForeignKeys();
+		$table = $this->getTranslator()->removeDbQuotes($table);
+		if (isset($all[$table])) return array_values($all[$table]);
 		return array();
 	}
 }

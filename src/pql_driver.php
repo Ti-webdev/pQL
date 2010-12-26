@@ -26,7 +26,7 @@ abstract class pQL_Driver {
 	}
 	
 	
-	private function cache($key) {
+	protected function cache($key) {
 		return new pQL_Cache_Element($this->pQL->cache(), $key);
 	}
 
@@ -373,10 +373,10 @@ abstract class pQL_Driver {
 	 */
 	private function getJoinTableFields($tableA, $tableB) {
 		// using REFERENCES
-		foreach($this->getForeignKeys($tableA) as $key) {
+		foreach($this->getForeignKeysCached($tableA) as $key) {
 			if (0 === strcasecmp($tableB, $key['table'])) return array($key['from'], $key['to']); 
 		}
-		foreach($this->getForeignKeys($tableB) as $key) {
+		foreach($this->getForeignKeysCached($tableB) as $key) {
 			if (0 === strcasecmp($tableA, $key['table'])) return array($key['to'], $key['from']);
 		}
 		
@@ -392,8 +392,15 @@ abstract class pQL_Driver {
 	
 	
 	abstract protected function getForeignKeys($table);
-	
-	
+
+
+	private function getForeignKeysCached($table) {
+		$cache = $this->cache("fk:$table");
+		if (!$cache->exists()) $cache->set($this->getForeignKeys($table));
+		return $cache->get();
+	}
+
+
 	private function getFieldsCached($table) {
 		$cache = $this->cache("f:$table");
 		if (!$cache->exists()) $cache->set($this->getTableFields($table));
