@@ -421,10 +421,15 @@ abstract class pQL_Driver {
 	 */
 	private function getJoinSecondTableFieldToFirstTable($tableA, $tableB) {
 		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
+		$tableNameA_s = preg_replace(array('#(?<=\w)ies$#', '#(?<=\w)s$#'), array('y', ''), $tableNameA);
 		foreach($this->getFieldsCachedNames($tableB) as $fieldB) {
 			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
-			$tableASuffix = substr($tableNameA, -strlen($fieldBSuffix));
+			$cutPos = -strlen($fieldBSuffix);
+			$tableASuffix = substr($tableNameA, $cutPos);
 			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
+			// если таблица в множественном числе
+			$tableASuffix_s = substr($tableNameA_s, $cutPos);
+			if (0 === strcasecmp($fieldBSuffix, $tableASuffix_s)) return $fieldB;
 		}
 		return null;
 	}

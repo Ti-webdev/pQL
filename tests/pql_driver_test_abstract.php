@@ -828,6 +828,49 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testJoinUsingThirdTableWith_S_Postfix() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_categories");
+		$this->exec("DROP TABLE IF EXISTS pql_test_items");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_categories(id ".$this->getPKExpr().", name VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_items(id ".$this->getPKExpr().", name VARCHAR(255), category_id INT)");
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", category INT, item INT)");
+		
+		// записи
+		$this->exec("INSERT INTO pql_test_categories(name) VALUES('cat_first')");
+		$this->exec("INSERT INTO pql_test_categories(name) VALUES('cat_second')");
+		$catId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_categories(name) VALUES('cat_last')");
+		
+		$this->exec("INSERT INTO pql_test_items(name, category_id) VALUES('item_first', null)");
+		$this->exec("INSERT INTO pql_test_items(name, category_id) VALUES('item_second', $catId)");
+		$itemId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_items(name, category_id) VALUES('item_last', 0)");
+		
+		$this->exec("INSERT INTO pql_test(category, item) VALUES(null, null)");
+		$this->exec("INSERT INTO pql_test(category, item) VALUES($catId, $itemId)");
+		$this->exec("INSERT INTO pql_test(category, item) VALUES(0, 0)");
+
+		// assert
+		$this->pql->coding(new pQL_Coding_Typical);
+		$this->assertEquals(array('cat_second'), $this->pql()->testItems->id->in($itemId)->db()->testCategories->name->toArray());
+
+
+		$found = false;
+		foreach($this->pql()->test->db()->testItems->name->bind($item)->db()->testCategories->name->bind($cat) as $test) {
+			if ($found) $this->fail();
+			$this->assertEquals('cat_second', $cat);
+			$this->assertEquals('item_second', $item);
+			$found = true;
+		}
+		if (!$found) $this->fail();
+		
+		
+		$this->exec("DROP TABLE IF EXISTS pql_test_categories");
+		$this->exec("DROP TABLE IF EXISTS pql_test_items");
+	}
+	
+	
 	function testJoinUsingTwoColumnForeingKey() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
