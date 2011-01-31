@@ -14,7 +14,7 @@ header('Content-Type: text/html; charset=UTF-8');
 <body>
 <h1>pQL</h1>
 
-<p>Дед мороз на носу, а пока предлагаю попробовать на вкус свежый ORM для PHP</p>
+<p>Попробуйте на вкус свежый ORM для PHP</p>
 
 
 <p>
