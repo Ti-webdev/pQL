@@ -59,6 +59,7 @@ abstract class pQL_Object {
 
 	function get($property) {
 		$found = false;
+		$result = null;
 
 		// ищем в новых свойствах
 		if (array_key_exists($property, $this->newProperties)) {
@@ -72,7 +73,7 @@ abstract class pQL_Object {
 		}
 
 		// если это связанный объект - получаем его
-		if (!($found and is_object($result)) and $this->isPropertyObject($property)) {
+		if (!is_object($result) and $this->isPropertyObject($property)) {
 			// если найдено свойство, значит id определен
 			if ($found) {
 				$result = $this->getDriver()->getObjectProperty($this, $property, $result);
@@ -83,6 +84,7 @@ abstract class pQL_Object {
 			}
 			$found = is_object($result);
 		}
+
 
 		if (!$found) throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
 

@@ -58,19 +58,6 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		return '"'.mysql_real_escape_string($value, $this->db).'"';
 	}
 
-	
-	function findByPk($class, $value) {
-		$tr = $this->getTranslator();
-		$table = $tr->modelToTable($class);
-		$pk = $this->getTablePrimaryKey($table);
-		$qValue = $this->quote($value);
-		$Q = $this->query("SELECT * FROM $table WHERE $pk = $qValue");
-		$R = mysql_fetch_assoc($Q);
-		$properties = array();
-		foreach($R as $field=>$value) $properties[$tr->fieldToProperty($field)] = $value;
-		return $this->getObject($class, $properties);
-	}
-
 
 	protected function updateByPk($table, $fields, $values, $pkValue) {
 		$pk = $this->getTablePrimaryKey($table);

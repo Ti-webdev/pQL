@@ -19,20 +19,6 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	function findByPk($class, $value) {
-		$tr = $this->getTranslator();
-		$table = $tr->modelToTable($class);
-		$pk = $this->getTablePrimaryKey($table);
-		$sth = $this->getDbh()->prepare("SELECT * FROM $table WHERE $pk = :value");
-		$sth->bindValue(':value', $value);
-		$sth->setFetchMode(PDO::FETCH_ASSOC);
-		$sth->execute();
-		$properties = array();
-		foreach($sth->fetch() as $field=>$value) $properties[$tr->fieldToProperty($field)] = $value;
-		return $this->getObject($class, $properties);
-	}
-
-
 	final protected function updateByPk($table, $fields, $values, $pkValue) {
 		$pk = $this->getTablePrimaryKey($table);
 		$sth = $this->getDbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");

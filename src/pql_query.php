@@ -388,4 +388,12 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$qValue = $this->driver->getParam($value);
 		$this->builder->addWhere("$field $symbol $qValue");
 	}
+	
+	
+	/**
+	 * @return pQL_Query_Builder
+	 */
+	function qb() {
+		return $this->builder;
+	}
 }

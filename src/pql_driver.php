@@ -66,7 +66,17 @@ abstract class pQL_Driver {
 	abstract function getToStringField($model);
 
 
-	abstract function findByPk($model, $value);
+	final function findByPk($model, $value) {
+		$table = $this->modelToTable($model);
+		$field = $this->getTablePrimaryKey($table);
+		$property = $this->fieldToProperty($field);
+		return $this->findByField($model, $property, $value);
+	}
+
+
+	function findByField($model, $property, $value) {
+		return $this->pQL->creater()->$model->$property->in($value)->one();
+	}
 
 
 	private function isPqlObject($value) {
@@ -111,14 +121,21 @@ abstract class pQL_Driver {
 		return $newProperties;
 	}
 	
-	
+
+	/**
+	 * удаляет модель с свойствами $newProperties и $properties
+	 * @param  $model
+	 * @param  $newProperties
+	 * @param  $properties
+	 * @return возращает свойства без PK
+	 */
 	final function delete($model, $newProperties, $properties) {
 		$tr = $this->getTranslator();
 		$table = $tr->modelToTable($model);
 		$pk = $this->getTablePrimaryKey($table);
 		$pkProperty = $tr->fieldToProperty($pk);
 		$this->deleteByPk($table, $properties[$pkProperty]);
-		$result= array_merge($properties, $newProperties);
+		$result = array_merge($properties, $newProperties);
 		unset($result[$pkProperty]);
 		return $result;
 	}
@@ -146,8 +163,6 @@ abstract class pQL_Driver {
 	 * @param string $table
 	 * @return string
 	 */
-
-
 	protected final function getTablePrimaryKey($table) {
 		foreach($this->getFieldsCached($table) as $field) {
 			if ($field->isPrimaryKey()) return $this->getTranslator()->addDbQuotes($field->getName());
@@ -488,25 +503,57 @@ abstract class pQL_Driver {
 		return null;
 	}
 	
-	
-	private function getObjectPropertyModel($model, $property) {
-		if (!$this->getPropertyForeignField($model, $property)) return false;
+
+	/**
+	 * Возращает модель у связанного свойства
+	 *
+	 * @param  $model
+	 * @param  $property
+	 * @return string modelName | false
+	 */
+	private function getObjectPropertyForeignKey($model, $property) {
+		// using REFERENCES
+		$table = $this->modelToTable($model);
+		$field = $this->propertyToField($property);
+		foreach($this->getForeignKeysCached($table) as $key) {
+			// ключ не комбинированный
+			if (1 === count($key['from'])) {
+				// на поле $field
+				if (0 === strcasecmp(reset($key['from']), $field)) return $key;
+			}
+		}
+
+		// using {имя}_id or id_{имя}
+		$propertyId = $this->getPropertyForeignField($model, $property);
+		if (!$propertyId) return false;
 
 		$tr = $this->getTranslator();
 		
 		$field = $this->propertyToField($property);
-		$field = $tr->removeDbQuotes($field);
+		$unquotedField = $tr->removeDbQuotes($field);
 
 		foreach($this->getTablesCached() as $quotedTable) {
 			$table = $tr->removeDbQuotes($quotedTable);
 
 			// если таблица заканчивается названием свойства
-			// считаем что свойсвто - объект
-			if (0 === strcasecmp($field, substr($table, - strlen($field)))) {
-				return $this->tableToModel($quotedTable);
+			// считаем что свойство - объект
+			// @TODO добавить проверку совпадения типов
+			if (0 === strcasecmp($unquotedField, substr($table, - strlen($unquotedField)))) {
+				return array(
+					'table'=>$quotedTable,
+					'from'=>array($this->propertyToField($propertyId)),
+					'to'=>array($this->getTablePrimaryKey($table)),
+				);
 			}
 		}
 		return false;
+	}
+
+
+	private function getObjectPropertyForeignKeyCached($model, $property) {
+		$cache = $this->cache("$model $property");
+		if (!$cache->exists()) $cache->set($this->getObjectPropertyForeignKey($model, $property));
+		return $cache->get();
 	}
 
 
@@ -516,7 +563,7 @@ abstract class pQL_Driver {
 	 * @param string $property
 	 */
 	final function isObjectProperty($model, $property) {
-		return (bool) $this->getObjectPropertyModel($model, $property);
+		return (bool) $this->getObjectPropertyForeignKeyCached($model, $property);
 	}
 
 
@@ -526,10 +573,25 @@ abstract class pQL_Driver {
 	 * @param string $property
 	 */
 	final function loadObjectProperty(pQL_Object $object, $property) {
-		$model = $object->getModel();
-		$foreignModel = $this->getObjectPropertyModel($model, $property);
-		$field = $this->getPropertyForeignField($model, $property);
-		$foreignId = $object->get($this->fieldToProperty($field));
-		return $this->findByPk($foreignModel, $foreignId);
+		$key = $this->getObjectPropertyForeignKeyCached($object->getModel(), $property);
+		$propertyId = $this->fieldToProperty(reset($key['from']));
+		$id = $object->get($propertyId);
+		$foreignModel = $this->tableToModel($key['table']);
+		$foreignProperty = $this->fieldToProperty(reset($key['to']));
+		return $this->findByField($foreignModel, $foreignProperty, $id);
+	}
+
+
+	/**
+	 * @param pQL_Object $object
+	 * @param  $property
+	 * @param  $value
+	 * @return pQL_Object
+	 */
+	final function getObjectProperty(pQL_Object $object, $property, $value) {
+		$key = $this->getObjectPropertyForeignKeyCached($object->getModel(), $property);
+		$foreignModel = $this->tableToModel($key['table']);
+		$foreignProperty = $this->fieldToProperty(reset($key['to']));
+		return $this->findByField($foreignModel, $foreignProperty, $value);
 	}
 }

@@ -686,6 +686,137 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertType('pQL_Object', $b->test);
 		$this->assertEquals('first', $b->test->val);
 	}
+
+
+	function testForeignObjectUsingForeingKey() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(id ".$this->getPKExpr().", val VARCHAR(255)) $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), a INT, FOREIGN KEY(a) REFERENCES pql_test_a(id)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('first')");
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('middle')");
+		$aId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('last')");
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES($aId-1, 'b_first')");
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES($aId,   'b_middle')");
+		$bId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES($aId+1, 'b_last')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$b = $this->pql()->testB($bId);
+		$this->assertType('pQL_Object', $b->a);
+		$this->assertEquals('middle', $b->a->val);
+
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
+
+
+	function testForeignObjectUsingForeingKeyAndNotPK() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(id ".$this->getPKExpr().", val VARCHAR(255), num INT UNIQUE) $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), a INT, FOREIGN KEY(a) REFERENCES pql_test_a(num)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a(val, num) VALUES('first', 5)");
+		$this->exec("INSERT INTO pql_test_a(val, num) VALUES('middle', 25)");
+		$this->exec("INSERT INTO pql_test_a(val, num) VALUES('last', 86)");
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES(5, 'b_first')");
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES(25,   'b_middle')");
+		$bId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(a, val) VALUES(86, 'b_last')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$b = $this->pql()->testB($bId);
+		$this->assertType('pQL_Object', $b->a);
+		$this->assertEquals('middle', $b->a->val);
+
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
+
+
+	/**
+	 * @TODO
+	 */
+	function _testForeignObjectUsingCombineForeingKey() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(aa CHAR(16), ab CHAR(16), ac CHAR(16), PRIMARY KEY(ab, ac)) $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(ba CHAR(16), bb CHAR(16), bc CHAR(16), FOREIGN KEY(bb, bc) REFERENCES pql_test_a(ab, ac)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_first', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second1', 'ab_second', 'ac_second1')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_second2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_a VALUES('aa_last', 'ab_last', 'ac_last')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba1', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test_b VALUES('ba3', 'ab_first', 'ac_first')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$b = $this->pql()->testB->ba->in('ba2')->one();
+		$this->assertEquals('aa_second2', $this->pql()->a($b)->aa);
+
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
+
+
+	/**
+	 * @TODO
+	 */
+	function _testFindObjectByCombinePK() {
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+		$this->exec("CREATE TABLE pql_test(aa CHAR(16), ab CHAR(16), ac CHAR(16), PRIMARY KEY(ab, ac)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test VALUES('aa_first', 'ab_first', 'ac_first')");
+		$this->exec("INSERT INTO pql_test VALUES('aa_second1', 'ab_second', 'ac_second1')");
+		$this->exec("INSERT INTO pql_test VALUES('aa_second2', 'ab_second', 'ac_second2')");
+		$this->exec("INSERT INTO pql_test VALUES('aa_last', 'ab_last', 'ac_last')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+		$this->assertEquals('aa_second2', $this->pql()->a('ab_second', 'ac_second2')->aa);
+	}
+
+
+	/**
+	 * @TODO
+	 */
+	function _testNotFoundByPk() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
+		$this->assertNull($this->pql()->test(6));
+	}
 	
 	
 	private function getClassNameTestResultObjects() {
