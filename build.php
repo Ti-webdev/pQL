@@ -6,9 +6,9 @@ $files = glob('src/*.php');
 sort($files);
 
 // получаем версию
-$version = trim(exec('git tag'));
+$version = trim(exec('git tag --contains'));
 if (!$version) {
-	fwrite(STDERR, 'version not found');
+	fwrite(STDERR, "Version not found. Set version using 'git tag \$tagname' command\n");
 	die(1);
 }
 
