@@ -29,7 +29,7 @@ abstract class pQL_Object {
 	
 	
 	function delete() {
-		$newProperties = $this->getDriver()->delete($this->getModel(), $this->newProperties, $this->properties);
+		$newProperties = $this->getDriver()->deleteByModel($this->getModel(), $this->newProperties, $this->properties);
 		$this->properties = array();
 		$this->newProperties = $newProperties;
 		return $this;

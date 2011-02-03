@@ -13,14 +13,18 @@ final class pQL_Creater {
 	private $pQL;
 
 
-	function __call($class, $arguments) {
+	function __call($model, $arguments) {
 		// find by pk
-		if ($arguments and $arguments[0]) {
-			return $this->pQL->driver()->findByPk($class, $arguments[0]);
+		if ($arguments) {
+			// is pQL object
+			if (is_object($arguments[0]) and $arguments[0] instanceof pQL_Object) {
+				return $this->pQL->driver()->findByForeignObject($model, $arguments[0]);
+			}
+			return $this->pQL->driver()->findByPk($model, $arguments[0]);
 		}
 
 		// new object
-		return $this->pQL->driver()->getObject($class);
+		return $this->pQL->driver()->getObject($model);
 	}
 
 

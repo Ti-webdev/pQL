@@ -68,13 +68,33 @@ abstract class pQL_Driver {
 
 	final function findByPk($model, $value) {
 		$table = $this->modelToTable($model);
-		$field = $this->getTablePrimaryKey($table);
-		$property = $this->fieldToProperty($field);
-		return $this->findByField($model, $property, $value);
+		$fields = $this->getTablePrimaryKey($table);
+		if (is_array($value)) {
+			$query = $this->pQL->creater()->$model;
+			foreach($fields as $field) {
+				$property = $this->fieldToProperty($field);
+				if (!isset($value[$property])) throw new InvalidArgumentException("Value $property not received");
+				$query->$property->in($value[$property])->one();
+			}
+			return $query->one();
+		}
+		if (1 < count($fields)) {
+			throw new InvalidArgumentException("Primary key more has ".count($fields)." fields. One received");
+		}
+		foreach($fields as $field) {
+			$property = $this->fieldToProperty($field);
+			return $this->findByField($model, $property, $value);
+		}
+	}
+
+
+	final function findByForeignObject($model, pQL_Object $object) {
+		return $this->pQL->creater()->$model->object($object)->one();
 	}
 
 
 	function findByField($model, $property, $value) {
+		if (!is_string($property)) throw new InvalidArgumentException("Assert string of \$property");
 		return $this->pQL->creater()->$model->$property->in($value)->one();
 	}
 
@@ -87,7 +107,7 @@ abstract class pQL_Driver {
 	private function getPqlId(pQL_Object $object) {
 		$tr = $this->getTranslator();
 		$foreignTable = $tr->modelToTable($object->getModel());
-		$foreignKey = $this->getTablePrimaryKey($foreignTable);
+		list($foreignKey) = $this->getTablePrimaryKey($foreignTable);
 		return $object->get($tr->fieldToProperty($foreignKey));
 	}
 
@@ -95,10 +115,15 @@ abstract class pQL_Driver {
 	final function save($model, $newProperties, $oldProperties) {
 		$tr = $this->getTranslator();
 		$table = $tr->modelToTable($model);
-		$pk = $this->getTablePrimaryKey($table);
-		$pkProperty = $tr->fieldToProperty($pk);
+		$pkFields = $this->getTablePrimaryKey($table);
 		$values = $fields = array();
-		$isUpdate = isset($oldProperties[$pkProperty]);
+		$isUpdate = (bool) $pkFields;
+		$pkValues = array();
+		foreach($pkFields as $pkField) {
+			$pkProperty = $tr->fieldToProperty($pkField);
+			$isUpdate = $isUpdate && isset($oldProperties[$pkProperty]);
+			if ($isUpdate) $pkValues[$pkField] = $oldProperties[$pkProperty];
+		}
 		foreach($newProperties as $key=>$value) {
 			$field = $tr->propertyToField($key);
 			
@@ -110,13 +135,15 @@ abstract class pQL_Driver {
 		}
 		if ($isUpdate) {
 			if (!$fields) return $newProperties;
-			if (!$pk) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined");
-			$this->updateByPk($table, $fields, $values, $oldProperties[$pkProperty]);
+			$this->update($table, $fields, $values, $pkValues);
 		}
 		else {
-			if (!$pk and !$fields) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined"); 
+			if (!$pkFields and !$fields) throw new pQL_Exception_PrimaryKeyNotExists("Primary key of $table not defined");
 			$id = $this->insert($table, $fields, $values);
-			if ($pk) $newProperties[$pkProperty] = $id;
+			if (1 == count($pkFields) and $id) {
+				$pkProperty = $tr->fieldToProperty(reset($pkFields));
+				$newProperties[$pkProperty] = $id;
+			}
 		}
 		return $newProperties;
 	}
@@ -129,21 +156,25 @@ abstract class pQL_Driver {
 	 * @param  $properties
 	 * @return возращает свойства без PK
 	 */
-	final function delete($model, $newProperties, $properties) {
+	final function deleteByModel($model, $newProperties, $properties) {
 		$tr = $this->getTranslator();
 		$table = $tr->modelToTable($model);
-		$pk = $this->getTablePrimaryKey($table);
-		$pkProperty = $tr->fieldToProperty($pk);
-		$this->deleteByPk($table, $properties[$pkProperty]);
+		$pkFields = $this->getTablePrimaryKey($table);
+		$pkValues = array();
 		$result = array_merge($properties, $newProperties);
-		unset($result[$pkProperty]);
+		foreach($pkFields as $pkField) {
+			$pkProperty = $tr->fieldToProperty($pkField);
+			$pkValues[$pkField] = $properties[$pkProperty];
+			unset($result[$pkProperty]);
+		}
+		$this->delete($table, $pkValues);
 		return $result;
 	}
 
 
-	abstract protected function updateByPk($table, $fields, $values, $pkValue);
+	abstract protected function update($table, $fields, $values, $where);
 	abstract protected function insert($table, $fields, $values);
-	abstract protected function deleteByPk($table, $value);
+	abstract protected function delete($table, $where);
 
 
 	final function getObject($model, $properties = array()) {
@@ -159,15 +190,16 @@ abstract class pQL_Driver {
 
 
 	/**
-	 * Взращает PRIMARY KEY поле таблицы
+	 * Взращает PRIMARY KEY поля таблицы
 	 * @param string $table
 	 * @return string
 	 */
-	protected final function getTablePrimaryKey($table) {
+	final function getTablePrimaryKey($table) {
+		$result = array();
 		foreach($this->getFieldsCached($table) as $field) {
-			if ($field->isPrimaryKey()) return $this->getTranslator()->addDbQuotes($field->getName());
+			if ($field->isPrimaryKey()) $result[] = $this->getTranslator()->addDbQuotes($field->getName());
 		}
-		return null;
+		return $result;
 	}
 
 
@@ -199,7 +231,7 @@ abstract class pQL_Driver {
 	}
 	
 	
-	function getBetweenExpr($expr, $min, $max) {
+	final function getBetweenExpr($expr, $min, $max) {
 		return "$expr BETWEEN $min AND $max";
 	}
 	
@@ -397,10 +429,10 @@ abstract class pQL_Driver {
 		
 		// using names
 		$fieldB = $this->getJoinSecondTableFieldToFirstTable($tableA, $tableB);
-		if ($fieldB) return array(array($this->getTablePrimaryKey($tableA)), array($fieldB));
+		if ($fieldB) return array($this->getTablePrimaryKey($tableA), array($fieldB));
 
 		$fieldA = $this->getJoinSecondTableFieldToFirstTable($tableB, $tableA);
-		if ($fieldA) return array(array($fieldA), array($this->getTablePrimaryKey($tableB)));
+		if ($fieldA) return array(array($fieldA), $this->getTablePrimaryKey($tableB));
 
 		return null;
 	}
@@ -542,7 +574,7 @@ abstract class pQL_Driver {
 				return array(
 					'table'=>$quotedTable,
 					'from'=>array($this->propertyToField($propertyId)),
-					'to'=>array($this->getTablePrimaryKey($table)),
+					'to'=>$this->getTablePrimaryKey($table),
 				);
 			}
 		}

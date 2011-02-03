@@ -19,11 +19,21 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	}
 
 
-	final protected function updateByPk($table, $fields, $values, $pkValue) {
-		$pk = $this->getTablePrimaryKey($table);
-		$sth = $this->getDbh()->prepare("UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE $pk = :pk LIMIT 1");
+	final protected function update($table, $fields, $values, $where) {
+		$sql = "UPDATE $table SET ".implode('= ?, ', $fields)." = ? WHERE ";
+		foreach(array_keys($where) as $i=>$field) {
+			if ($i) $sql .= ' AND ';
+			$sql .= "$field = ?";
+		}
+		$sql .= ' LIMIT 1';
+		$sth = $this->getDbh()->prepare($sql);
+		unset($sql);
+
 		foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
-		$sth->bindValue(':pk', $pkValue);
+		$num = $i+1;
+		foreach(array_values($where) as $i=>$val) $sth->bindValue($i+$num, $val);
+
+		$sth->bindValue(':pk', $where);
 		$sth->execute();
 	}
 	
@@ -36,16 +46,22 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 		}
 		else {
 			$pk = $this->getTablePrimaryKey($table);
-			$this->getDbh()->exec("INSERT INTO $table($pk) VALUES(NULL)");
+			$fields = implode(',', $pk);
+			$values = implode(',', array_fill(0, count($fields), 'NULL'));
+			$this->getDbh()->exec("INSERT INTO $table($fields) VALUES($values)");
 		}
 		return $this->getDbh()->lastInsertId();
 	}
 	
 	
-	function deleteByPk($table, $value) {
-		$pk = $this->getTablePrimaryKey($table);
-		$sth = $this->getDbh()->prepare("DELETE FROM $table WHERE $pk = :pk");
-		$sth->bindValue(':pk', $value);
+	function delete($table, $where) {
+		$sql = "DELETE FROM $table WHERE ";
+		foreach(array_keys($where) as $i=>$field) {
+			if ($i) $sql .= ' AND ';
+			$sql .= "$field = ?";
+		}
+		$sth = $this->getDbh()->prepare($sql);
+		foreach(array_values($where) as $i=>$value) $sth->bindValue($i+1, $value);
 		$sth->execute();
 	}
 

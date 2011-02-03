@@ -293,6 +293,33 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->builder = $this->mediator->getBuilder();
 		#$this->cleanResult();
 	}
+
+
+	function with(pQL_Object $object) {
+		$this->cleanResult();
+
+		$model = $object->getModel();
+		$table = $this->driver->modelToTable($model);
+
+		$qTable = $this->builder->registerTable($table);
+		$this->driver->joinTable($this->mediator, $qTable);
+
+		foreach($this->driver->getTablePrimaryKey($table) as $field) {
+			$property = $this->driver->fieldToProperty($field);
+			$value = $object->get($property);
+			$rField = $this->builder->registerField($qTable, $field);
+			$qField = $this->builder->getField($rField);
+			if (is_null($value)) {
+				$expression = $this->driver->getIsNullExpr($qField);
+			}
+			else {
+				$expression = $qField.' = '.$this->driver->getParam($value);
+			}
+			$this->builder->addWhere($expression);
+		}
+
+		return $this;
+	}
 	
 	
 	/**
@@ -374,11 +401,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	private function getField() {
 		$this->assertFieldDefined();
 		$this->joinCurrentTable();
-
-		$result = $this->builder->getTableAlias($this->table);
-		$result .= '.';
-		$result .= $this->field->getName();
-		return $result;
+		return $this->builder->getField($this->field);
 	}
 
 

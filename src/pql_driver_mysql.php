@@ -59,23 +59,33 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	protected function updateByPk($table, $fields, $values, $pkValue) {
-		$pk = $this->getTablePrimaryKey($table);
+	protected function update($table, $fields, $values, $where) {
 		$sql = "UPDATE $table SET ";
 		foreach($fields as $i=>$field) {
 			if ($i) $sql .= ', ';
 			$sql .= "$field = ".$this->quote($values[$i]);
 		}
-		$qPkValue = $this->quote($pkValue);
-		$sql .= " WHERE $pk = $qPkValue LIMIT 1";
+		$first = true;
+		foreach($where as $pkField=>$pkValue) {
+			if ($first) {
+				$sql .= ' WHERE ';
+				$first = false;
+			}
+			else {
+				$sql .= ' AND ';
+			}
+			$qPkValue = $this->quote($where);
+			$sql .= "$pkField = $qPkValue";
+		}
+		$sql .= ' LIMIT 1';
 		$this->query($sql);
 	}
 
 
 	protected function insert($table, $fields, $values) {
 		if (!$fields) {
-			$fields = array($this->getTablePrimaryKey($table));
-			$values = array(null);
+			$fields = $this->getTablePrimaryKey($table);
+			$values = array_fill(0, count($fields), null);
 		}
 
 		$sql = "INSERT INTO $table(".implode(',', $fields).") VALUES(";
@@ -92,10 +102,15 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 	
 	
-	function deleteByPk($table, $value) {
-		$pk = $this->getTablePrimaryKey($table);
-		$pkValue = $this->quote($value);
-		$this->query("DELETE FROM $table WHERE $pk = $pkValue");
+	function delete($table, $where) {
+		$sql = "DELETE FROM $table WHERE ";
+		$first = true;
+		foreach($where as $field=>$value) {
+			if ($first) $first = false;
+			else $sql .= ' AND ';
+			$sql .= "$field = ".$this->quote($value);
+		}
+		$this->query($sql);
 	}
 
 

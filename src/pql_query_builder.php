@@ -129,6 +129,14 @@ final class pQL_Query_Builder {
 		return 'f'.$this->getFieldNum($bField);
 	}
 
+	
+	function getField(pQL_Query_Builder_Field $field) {
+		$result = $this->getTableAlias($field->getTable());
+		$result .= '.';
+		$result .= $field->getName();
+		return $result;
+	}
+
 
 	function getTableAlias(pQL_Query_Builder_Table $bTable) {
 		return 't'.$this->getTableNum($bTable);
