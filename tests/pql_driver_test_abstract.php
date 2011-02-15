@@ -77,6 +77,19 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($val, $this->pql()->test->one()->__toString());
 	}
 
+
+	function testUpdate() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(32))");
+		$this->exec("INSERT INTO pql_test(val) VALUES('".md5(microtime(true))."')");
+		$id = $this->lastInsertId();
+
+		$object = $this->pql()->test($id);
+		$object->val = md5(microtime(true));
+		$object->save();
+
+		$this->assertEquals($object->val, $this->pql()->test($id)->val);
+	}
+
 	
 	function testFieldIterator() {
 		$this->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
@@ -137,8 +150,12 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(count($expected['first']), $i);
 	}
 	
-	
-	function getValueIterator() {
+
+	/**
+	 * @todo
+	 * @return void
+	 */
+	function testValueIterator() {
 		$this->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
 
 		$expected = array();
@@ -150,7 +167,12 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 			$object->save();
 		}
 
-		foreach($this->pql()->test->number->value()->db() as $i=>$number) {
+		$it = $this->pql()
+			->test
+			->number
+			->value()
+			->db();
+		foreach($it as $i=>$number) {
 			$this->assertEquals($expected['number'][$i], $number);
 		}
 		$this->assertEquals(count($expected['first']), $i+1);
@@ -161,9 +183,9 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(count($expected['first']), $i+1);
 
 		$i = 0;
-		foreach($this->pql()->test->number->value()->last->key() as $last=>$object) {
+		foreach($this->pql()->test->number->value()->last->key() as $last=>$number) {
 			$this->assertEquals($expected['last'][$i], $last);
-			$this->assertEquals($expected['number'][$i], $object->number);
+			$this->assertEquals($expected['number'][$i], $number);
 			$i++;
 		}
 		$this->assertEquals(count($expected['first']), $i);

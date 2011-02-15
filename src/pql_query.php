@@ -271,7 +271,6 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 * @return pQL_Query_Iterator
 	 */
 	function getIterator() {
-		$this->assertTableDefined();
 		return $this->mediator->getIterator($this->driver);
 	}
 

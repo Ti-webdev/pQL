@@ -25,15 +25,23 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 			if ($i) $sql .= ' AND ';
 			$sql .= "$field = ?";
 		}
-		$sql .= ' LIMIT 1';
 		$sth = $this->getDbh()->prepare($sql);
 		unset($sql);
 
-		foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
-		$num = $i+1;
-		foreach(array_values($where) as $i=>$val) $sth->bindValue($i+$num, $val);
+		// bind:
+		// 1. values
+		$num = 1;
+		foreach($values as $val) {
+			$sth->bindValue($num, $val);
+			$num++;
+		}
 
-		$sth->bindValue(':pk', $where);
+		// 2. where
+		foreach($where as $val) {
+			$sth->bindValue($num, $val);
+			$num++;
+		}
+
 		$sth->execute();
 	}
 	

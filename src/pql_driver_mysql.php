@@ -61,12 +61,16 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 
 	protected function update($table, $fields, $values, $where) {
 		$sql = "UPDATE $table SET ";
+
+		// SET
 		foreach($fields as $i=>$field) {
 			if ($i) $sql .= ', ';
 			$sql .= "$field = ".$this->quote($values[$i]);
 		}
+
+		// WHERE
 		$first = true;
-		foreach($where as $pkField=>$pkValue) {
+		foreach($where as $whereField=>$whereValue) {
 			if ($first) {
 				$sql .= ' WHERE ';
 				$first = false;
@@ -74,8 +78,8 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 			else {
 				$sql .= ' AND ';
 			}
-			$qPkValue = $this->quote($where);
-			$sql .= "$pkField = $qPkValue";
+			$qPkValue = $this->quote($whereValue);
+			$sql .= "$whereField = $qPkValue";
 		}
 		$sql .= ' LIMIT 1';
 		$this->query($sql);
