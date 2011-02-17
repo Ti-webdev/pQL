@@ -653,7 +653,7 @@ abstract class pQL_Driver {
 
 	final function propertyNotExists($model, $property) {
 		$table = $this->modelToTable($model);
-		$field = $this->propertyToField($property);
+		$field = $this->getTranslator()->removeDbQuotes($this->propertyToField($property));
 		foreach($this->getTableFields($table) as $dbField) {
 			if ($field == $dbField->getName()) return false;
 		}
