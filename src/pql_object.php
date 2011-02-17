@@ -43,7 +43,10 @@ abstract class pQL_Object {
 		return $this->pQL;
 	}
 	
-	
+
+	/**
+	 * @return pQL_Driver
+	 */
 	final protected function getDriver() { 
 		return $this->getPQL()->driver();
 	}
@@ -91,8 +94,11 @@ abstract class pQL_Object {
 			$found = is_object($result);
 		}
 
-
-		if (!$found) throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
+		if (!$found) {
+			if ($this->properties or $this->getDriver()->propertyNotExists($this->getModel(), $property)) {
+				throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
+			}
+		}
 
 		return $result;
 	}

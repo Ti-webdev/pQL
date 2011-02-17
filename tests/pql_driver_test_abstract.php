@@ -418,7 +418,14 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$object->loadProperties();
 		$this->assertEquals(22, $object->val);
 	}
-	
+
+
+	function testGetPropertyOnNewObject() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		$this->assertNull($this->pql()->test()->id);
+		$this->assertNull($this->pql()->test()->val);
+	}
+
 	
 	function testCloneQuery() {
 		$this->exec("CREATE TABLE pql_test(val INT)");
@@ -1107,6 +1114,10 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 
 
+	/**
+	 * @todo
+	 * @return void
+	 */
 	function _testGetObjectByForeignObject() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");

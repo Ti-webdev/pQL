@@ -649,4 +649,14 @@ abstract class pQL_Driver {
 		$foreignProperty = $this->fieldToProperty(reset($key['to']));
 		return $this->findByField($foreignModel, $foreignProperty, $value);
 	}
+
+
+	final function propertyNotExists($model, $property) {
+		$table = $this->modelToTable($model);
+		$field = $this->propertyToField($property);
+		foreach($this->getTableFields($table) as $dbField) {
+			if ($field == $dbField->getName()) return false;
+		}
+		return true;
+	}
 }
