@@ -177,6 +177,29 @@ abstract class pQL_Driver {
 	abstract protected function delete($table, $where);
 
 
+	function getProperties(pQL_Object $object) {
+		$tr = $this->getTranslator();
+		$model = $object->getModel();
+		$table = $tr->modelToTable($model);
+		$pkFields = $this->getTablePrimaryKey($table);
+
+		$query = $this->pQL->creater()->$model;
+		// where
+		foreach($pkFields as $pkField) {
+			$pkProperty = $tr->fieldToProperty($pkField);
+			$query->$pkProperty->in($object->$pkProperty);
+		}
+		$result = array();
+		// bind
+		foreach($this->getTableFields($table) as $field) {
+			$property = $tr->fieldToProperty($field->getName());
+			$query->$property->bind($result[$property]);
+		}
+		$query->one();
+		return $result;
+	}
+
+
 	final function getObject($model, $properties = array()) {
 		$result = $this->getObjectDefinder()->getObject($this->pQL, $model, $properties);
 		if (is_object($result) and $result instanceof pQL_Object) return $result;

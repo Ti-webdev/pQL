@@ -57,6 +57,12 @@ abstract class pQL_Object {
 	}
 
 
+	final function loadProperties() {
+		$this->properties = $this->getDriver()->getProperties($this);
+		return $this;
+	}
+
+
 	function get($property) {
 		$found = false;
 		$result = null;

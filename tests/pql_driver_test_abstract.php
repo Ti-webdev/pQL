@@ -406,6 +406,18 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 		$this->assertEquals(range(20, 6), $this->pql()->test->negative->asc()->limit(15)->val->toArray());
 	}
+
+
+	function testLoadProperties() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		$this->exec("INSERT INTO pql_test(val) VALUES(1)");
+		$object = $this->pql()->test->one();
+		$this->assertEquals(1, $object->val);
+		$this->exec("UPDATE pql_test SET val = 22");
+		$this->assertEquals(1, $object->val);
+		$object->loadProperties();
+		$this->assertEquals(22, $object->val);
+	}
 	
 	
 	function testCloneQuery() {
