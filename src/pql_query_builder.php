@@ -201,13 +201,13 @@ final class pQL_Query_Builder {
 	/**
 	 * Возращает часть запроса, начиная с FROM до ORDER BY
 	 */
-	function getSQLSuffix(pQL_Driver $driver) {
-		return $this->getSQLFrom().$this->where.$this->getLimitExpr($driver);
+	function getSQLSuffix(pQL_Driver $driver, $suffix = '') {
+		return $this->getSQLFrom().$this->where.$suffix.$this->getLimitExpr($driver);
 	}
 
 
 	function getSQL(pQL_Driver $driver) {
-		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver).$this->orderBy;
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $this->orderBy);
 		return $sql;
 	}
 }

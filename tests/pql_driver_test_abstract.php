@@ -393,6 +393,19 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("UPDATE pql_test SET negative = 50");
 		$this->assertEquals(range(20, 0), $this->pql()->test->negative->desc()->val->desc()->value()->toArray());
 	}
+
+
+
+	function testLimitAndOrderQuery() {
+		$this->exec("CREATE TABLE pql_test(val INT, negative INT)");
+		for($i = 11; $i<=20; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES($i, -$i)");
+		}
+		for($i = 0; $i<=10; $i++) {
+			$this->exec("INSERT INTO pql_test VALUES($i, -$i)");
+		}
+		$this->assertEquals(range(20, 6), $this->pql()->test->negative->asc()->limit(15)->val->toArray());
+	}
 	
 	
 	function testCloneQuery() {
