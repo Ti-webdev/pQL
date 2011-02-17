@@ -159,7 +159,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	}
 
 
-	function ask() {
+	function asc() {
 		$this->cleanResult();
 		$this->builder->addOrder($this->getField());
 		return $this;
