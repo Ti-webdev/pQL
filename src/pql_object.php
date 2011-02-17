@@ -5,7 +5,7 @@
  * @author Ti
  * @package pQL
  */
-abstract class pQL_Object {
+abstract class pQL_Object implements ArrayAccess {
 	function __construct(pQL $pQL, $properties) {
 		$this->properties = $properties;
 		$this->pQL = $pQL;
@@ -95,7 +95,7 @@ abstract class pQL_Object {
 		}
 
 		if (!$found) {
-			if ($this->properties or $this->getDriver()->propertyNotExists($this->getModel(), $property)) {
+			if ($this->properties or !$this->getDriver()->propertyExists($this->getModel(), $property)) {
 				throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
 			}
 		}
@@ -121,5 +121,28 @@ abstract class pQL_Object {
 	
 	function __toString() {
 		return (string) $this->get($this->getToStringField());
+	}
+
+
+	final function offsetGet($property) {
+		return $this->get($property);
+	}
+
+
+	final function offsetSet($property, $value) {
+		return $this->set($property, $value);
+	}
+
+
+	final function offsetExists($property) {
+		if (array_key_exists($property, $this->properties)) return true;
+		if (array_key_exists($property, $this->newProperties)) return true;
+		return $this->getDriver()->propertyExists($this->getModel(), $property);
+	}
+
+
+	final function offsetUnset($property) {
+		throw new RuntimeException('Method '.__METHOD__.' not allow');
+		return $this;
 	}
 }
