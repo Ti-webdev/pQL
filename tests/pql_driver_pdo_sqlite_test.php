@@ -85,10 +85,10 @@ class pQL_Driver_PDO_SQLite_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	
 		// схема базы
-		$this->exec("CREATE TABLE pql_test_a(i ".$this->getPKExpr().", val VARCHAR(255))");
-		$this->exec("CREATE TABLE pql_test_b(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_a(i))");
-		$this->exec("CREATE TABLE pql_test_c(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_b(i))");
-		$this->exec("CREATE TABLE pql_test_d(i ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_c(i))");
+		$this->exec("CREATE TABLE pql_test_a(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_a(id))");
+		$this->exec("CREATE TABLE pql_test_c(id ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_b(id))");
+		$this->exec("CREATE TABLE pql_test_d(id ".$this->getPKExpr().", val VARCHAR(255), f INT REFERENCES pql_test_c(id))");
 		
 		// записи
 		$this->exec("INSERT INTO pql_test_a(val) VALUES('first')");

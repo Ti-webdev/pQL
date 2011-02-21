@@ -7,6 +7,16 @@
  */
 final class pQL_Query_Builder {
 	private $registeredTables = array();
+	function __construct() {
+		$this->where = new pQL_Query_Expr;
+		$this->orderBy = new pQL_Query_Expr;
+	}
+
+
+	function __clone() {
+		$this->where = clone $this->where;
+		$this->orderBy = clone $this->orderBy;
+	}
 
 
 	/**
@@ -130,9 +140,14 @@ final class pQL_Query_Builder {
 	}
 
 	
-	function getField(pQL_Query_Builder_Field $field) {
-		$result = $this->getTableAlias($field->getTable());
-		$result .= '.';
+	function getField(pQL_Query_Builder_Field $field, $withAlias = true) {
+		if ($withAlias) {
+			$result = $this->getTableAlias($field->getTable());
+			$result .= '.';
+		}
+		else {
+			$result = '';
+		}
 		$result .= $field->getName();
 		return $result;
 	}
@@ -146,26 +161,25 @@ final class pQL_Query_Builder {
 	/**
 	 * @return string выражение FROM включая все JOIN
 	 */
-	private function getSQLFrom() {
+	private function getSQLFrom($withAlias = true) {
 		$result = '';
 		foreach($this->tables as $tableNum=>$rTable) {
 			if ($tableNum) $result .= ', ';
 			$result .= $rTable->getName();
-			$result .= ' AS ';
-			$result .= $this->getTableAlias($rTable);
+			if ($withAlias) {
+				$result .= ' AS ';
+				$result .= $this->getTableAlias($rTable);
+			}
 		}
 		return ' FROM '.$result;
 	}
 
 
-	private $where = '';
-	function addWhere($expression) {
-		if ($this->where) $this->where .= ' AND ';
-		else $this->where .= ' WHERE ';
-
-		$this->where .= $expression;
-
-		return $this;
+	private $where;
+	function addWhere($expr) {
+		$this->where->push($this->where->isEmpty() ? ' WHERE ' : ' AND ');
+		$args = is_array($expr) ? $expr : func_get_args();
+		foreach($args as $arg) $this->where->push($arg);
 	}
 
 
@@ -186,10 +200,11 @@ final class pQL_Query_Builder {
 	}
 	
 	
-	private $orderBy = '';
+	private $orderBy;
 	function addOrder($expr) {
-		$this->orderBy .= $this->orderBy ? ', ' : ' ORDER BY ';
-		$this->orderBy .= $expr;
+		$this->orderBy->push($this->orderBy->isEmpty() ? ' ORDER BY ' : ', ');
+		$args = is_array($expr) ? $expr : func_get_args();
+		foreach($args as $arg) $this->orderBy->push($arg);
 	}
 	
 	
@@ -202,12 +217,22 @@ final class pQL_Query_Builder {
 	 * Возращает часть запроса, начиная с FROM до ORDER BY
 	 */
 	function getSQLSuffix(pQL_Driver $driver, $suffix = '') {
-		return $this->getSQLFrom().$this->where.$suffix.$this->getLimitExpr($driver);
+		$where = $this->where->get($this);
+		return $this->getSQLFrom().$where.$suffix.$this->getLimitExpr($driver);
 	}
 
 
 	function getSQL(pQL_Driver $driver) {
-		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $this->orderBy);
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $this->orderBy->get($this));
 		return $sql;
+	}
+
+
+	function getDeleteSQL(pQL_Driver $driver) {
+		$limit = $this->getLimit($driver);
+		$where = $this->where->get($this, false);
+		$result = 'DELETE '.$this->getSQLFrom(false).$where;
+		if ($limit) $result .= $this->orderBy->get($this, false).$limit;
+		return $result;
 	}
 }

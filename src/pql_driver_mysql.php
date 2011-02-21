@@ -134,13 +134,13 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 	}
 
 
-	function getIsNullExpr($partSql) {
-		return "$partSql IS NULL";
+	function getIsNullExpr() {
+		return 'IS NULL';
 	}
 	
 
-	function getNotNullExpr($expr) {
-		return "$expr IS NOT NULL";
+	function getNotNullExpr() {
+		return 'IS NOT NULL';
 	}
 
 
@@ -204,5 +204,11 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		$table = $this->getTranslator()->removeDbQuotes($table);
 		if (isset($all[$table])) return array_values($all[$table]);
 		return array();
+	}
+
+
+	function exec($sql) {
+		$this->query($sql);
+		return is_null($this->db) ? mysql_affected_rows() : mysql_affected_rows($this->db);
 	}
 }

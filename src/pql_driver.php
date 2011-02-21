@@ -176,6 +176,8 @@ abstract class pQL_Driver {
 	abstract protected function insert($table, $fields, $values);
 	abstract protected function delete($table, $where);
 
+	abstract function exec($sql);
+
 
 	function getProperties(pQL_Object $object) {
 		$tr = $this->getTranslator();
@@ -244,21 +246,16 @@ abstract class pQL_Driver {
 	abstract function getParam($val);
 
 
-	function getIsNullExpr($expr) {
-		return "$expr ISNULL";
+	function getIsNullExpr() {
+		return 'ISNULL';
 	}
 
 
-	function getNotNullExpr($expr) {
-		return "$expr NOTNULL";
+	function getNotNullExpr() {
+		return 'NOTNULL';
 	}
 	
-	
-	final function getBetweenExpr($expr, $min, $max) {
-		return "$expr BETWEEN $min AND $max";
-	}
-	
-	
+		
 	function getLimitExpr($offset, $limit) {
 		$result = '';
 		if ($offset) {
@@ -322,17 +319,14 @@ abstract class pQL_Driver {
 			// объединяем таблицы
 			$fields1 = reset($join);
 			$table1 = $builder->registerTable(key($join));
-			$alias1 = $builder->getTableAlias($table1);
-			
+
 			$fields2 = next($join);
 			$table2 = $builder->registerTable(key($join));
-			$alias2 = $builder->getTableAlias($table2);
-			
+
 			foreach($fields1 as $i=>$field1) {
-				$expr = $alias1.'.'.$field1;
-				$expr .= ' = ';
-				$expr .= $alias2.'.'.$fields2[$i];
-				$builder->addWhere($expr);
+				$bField1 = $builder->registerField($table1, $field1);
+				$bField2 = $builder->registerField($table2, $fields2[$i]);
+				$builder->addWhere($bField1,' = ',$bField2);
 			}
 		}
 	}

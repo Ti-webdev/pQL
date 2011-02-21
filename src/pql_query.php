@@ -101,10 +101,11 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	function between($min, $max) {
 		$this->cleanResult();
 		$field = $this->getField();
+
 		$qMin = $this->driver->getParam($min);
 		$qMax = $this->driver->getParam($max);
-		$expression = $this->driver->getBetweenExpr($field, $qMin, $qMax);
-		$this->builder->addWhere($expression);
+		$this->builder->addWhere($field," BETWEEN $qMin AND $qMax");
+
 		return $this;
 	}
 	
@@ -168,7 +169,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	
 	function desc() {
 		$this->cleanResult();
-		$this->builder->addOrder($this->getField().' DESC');
+		$this->builder->addOrder($this->getField(),' DESC');
 		return $this;
 	}
 
@@ -221,35 +222,40 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$field = $this->getField(); 
 		$this->cleanResult();
 
+		// собираем параметры
 		$orNull = false;
-		$expression = null;
-		$i = 0;
+		$expression = array();
 		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
 		foreach($vals as $val) {
 			if (is_null($val)) {
 				$orNull = true;
 			}
 			else {
-				if (0 < $i) {
-					if (1 == $i) $expression = "$field $in($expression";
-					$expression .= ','.$this->driver->getParam($val);
-				}
-				else {
-					$expression = $this->driver->getParam($val);
-				}
-				$i++;
+				if ($expression) $expression[] = ',';
+				$expression[] = $this->driver->getParam($val);
 			}
 		}
-		
-		if (0 < $i) {
-			if (1 == $i) $expression = "$field $equals $expression";
-			else $expression .= ')';
 
-			if ($orNull) $expression = "($expression $operator ".$this->driver->getIsNullExpr($field).')';
+		if ($expression) {
+			// IN или =
+			if (1 == count($expression)) {
+				array_unshift($expression, ' '.$equals.' ');
+			}
+			else {
+				array_unshift($expression, " $in (");
+				array_push($expression, ")");
+			}
+
+			// поле
+			array_unshift($expression, $field);
+
+			if ($orNull) {
+				array_unshift($expression, '(');
+				array_push($expression, ' '.$operator.' ', $field, ' '.$this->driver->$nullFn(), ')');
+			}
 			$this->builder->addWhere($expression);
 		} elseif ($orNull) {
-			$expression = $this->driver->$nullFn($field);
-			$this->builder->addWhere($expression);
+			$this->builder->addWhere($field, ' '.$this->driver->$nullFn());
 		}
 	}
 	
@@ -307,14 +313,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 			$property = $this->driver->fieldToProperty($field);
 			$value = $object->get($property);
 			$rField = $this->builder->registerField($qTable, $field);
-			$qField = $this->builder->getField($rField);
-			if (is_null($value)) {
-				$expression = $this->driver->getIsNullExpr($qField);
-			}
-			else {
-				$expression = $qField.' = '.$this->driver->getParam($value);
-			}
-			$this->builder->addWhere($expression);
+			$this->builder->addWhere($rField, is_null($value) ? ' ISNULL ' : ' = '.$this->driver->getParam($value));
 		}
 
 		return $this;
@@ -400,7 +399,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	private function getField() {
 		$this->assertFieldDefined();
 		$this->joinCurrentTable();
-		return $this->builder->getField($this->field);
+		return $this->field;
 	}
 
 
@@ -408,7 +407,7 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->cleanResult();
 		$field = $this->getField();
 		$qValue = $this->driver->getParam($value);
-		$this->builder->addWhere("$field $symbol $qValue");
+		$this->builder->addWhere($field, " $symbol $qValue");
 	}
 	
 	
@@ -417,5 +416,10 @@ final class pQL_Query implements IteratorAggregate, Countable {
 	 */
 	function qb() {
 		return $this->builder;
+	}
+
+
+	function delete() {
+		return $this->driver->exec($this->builder->getDeleteSQL($this->driver));
 	}
 }

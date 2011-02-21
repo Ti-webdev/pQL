@@ -715,12 +715,20 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
-	function testDelete() {
+	function testDeleteObject() {
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().")");
 		$object = $this->pql()->test()->save();
 		$this->assertEquals(1, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
 		$object->delete();
 		$this->assertEquals(0, $this->queryValue("SELECT COUNT(*) FROM pql_test"));
+	}
+
+
+	function testDeleteQuery() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$this->pql()->test->val->between(3,5)->delete();
+		$this->assertEquals(array_merge(range(0, 2), range(6, 9)), $this->pql()->test->val->toArray());
 	}
 	
 	

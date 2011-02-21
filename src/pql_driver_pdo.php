@@ -89,4 +89,9 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	final function getParam($val) {
 		return $this->getDbh()->quote($val);
 	}
+
+
+	final function exec($sql) {
+		return $this->getDbh()->exec($sql);
+	}
 }
