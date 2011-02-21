@@ -145,4 +145,10 @@ abstract class pQL_Object implements ArrayAccess {
 		throw new RuntimeException('Method '.__METHOD__.' not allow');
 		return $this;
 	}
+
+
+	final function needSave($property = null) {
+		if (is_null($property)) return $this->newProperties || !$this->properties;
+		return array_key_exists($property, $this->newProperties);
+	}
 }
