@@ -229,6 +229,7 @@ final class pQL_Query_Builder {
 
 
 	function getDeleteSQL(pQL_Driver $driver) {
+		if (!$this->tables) $this->addTable(reset($this->registeredTables));
 		$limit = $this->getLimit($driver);
 		$where = $this->where->get($this, false);
 		$result = 'DELETE '.$this->getSQLFrom(false).$where;
