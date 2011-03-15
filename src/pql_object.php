@@ -75,6 +75,7 @@ abstract class pQL_Object implements ArrayAccess {
 			$result = $this->newProperties[$property];
 			$found = true;
 		}
+
 		// и в текущих
 		elseif (array_key_exists($property, $this->properties)) {
 			$result = $this->properties[$property];
@@ -92,15 +93,51 @@ abstract class pQL_Object implements ArrayAccess {
 				$result = $this->getDriver()->loadObjectProperty($this, $property);
 			}
 			$found = is_object($result);
+			if ($found) {
+				// object in properties
+				if (isset($this->newProperties[$property])) $this->newProperties[$property] = $result;
+				else $this->properties[$property] = $result;
+			}
 		}
 
 		if (!$found) {
-			if ($this->properties or !$this->getDriver()->propertyExists($this->getModel(), $property)) {
+			if ($this->loadProperty($property)) {
+				return $this->properties[$property];
+			}
+			else {
 				throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
 			}
 		}
 
 		return $result;
+	}
+	
+	
+	private function loadProperty($property) {
+		if (!$this->properties) {
+			$this->properties[$property] = null;
+			return true;
+		}
+
+		$model = $this->getModel();
+		if (!$this->getDriver()->propertyExists($model, $property)) return false;
+		
+		$table = $this->getDriver()->modelToTable($model);
+		$pk = $this->getDriver()->getTablePrimaryKey($table);
+		if (!$pk) return false;
+		
+		$query = $this->pQL->creater()->{$this->getModel()};
+		foreach($pk as $pkField) {
+			$pkProperty = $this->getDriver()->fieldToProperty($pkField);
+			if (!isset($this->properties[$pkProperty])) return false;
+			$id = $this->properties[$pkProperty];
+			$query->$pkProperty->in($id);
+		}
+		foreach($query->$property as $result) {
+			$this->properties[$property] = $result;
+			return true;
+		}
+		return false;
 	}
 
 

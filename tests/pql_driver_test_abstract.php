@@ -1072,6 +1072,17 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testLazyLoad() {
+		$val = md5(microtime(true));
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(32))");
+		$this->exec("INSERT INTO pql_test(val) VALUES('$val')");
+		$id = $this->lastInsertId();
+		
+		$object = new pQL_Object_Model($this->pql, array('id'=>$id), 'test');
+		$this->assertEquals($val, $object->val);
+	}
+
+
 	function testJoinUsingTwoColumnForeingKey() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
