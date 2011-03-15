@@ -171,15 +171,25 @@ final class pQL_Driver_MySQL extends pQL_Driver {
 		return $result;
 	}
 	
+
+	const ERR_DENIED = 1142;
+	
 	
 	private function getAllForeignKeys() {
 		$cache = $this->cache('fk');
 		if ($cache->exists()) return $cache->get();
 		$dbName = $this->quote($this->getDbName());
+		try {
 		$Q = $this->query("SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
 			FROM information_schema.KEY_COLUMN_USAGE
 			WHERE CONSTRAINT_SCHEMA = $dbName AND REFERENCED_TABLE_NAME IS NOT NULL
 			ORDER BY TABLE_NAME, REFERENCED_TABLE_NAME, POSITION_IN_UNIQUE_CONSTRAINT");
+		}
+		catch (pQL_Driver_MySQL_Query_Exception $e) {
+			if (self::ERR_DENIED != $e->getCode()) throw $e;
+			$cache->set(null);
+			return null; 
+		}
 		$result = array();
 		$tr = $this->getTranslator();
 		while($R = mysql_fetch_assoc($Q)) {

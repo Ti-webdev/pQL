@@ -74,14 +74,24 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 	}
 	
 	
+	const ERR_DENIED = 1142;
+	
+	
 	private function getAllForeignKeys() {
 		$cache = $this->cache('fk');
 		if ($cache->exists()) return $cache->get();
 		$dbName = $this->getDbh()->quote($this->getDbName());
-		$Q = $this->getDbh()->query("SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
-			FROM information_schema.KEY_COLUMN_USAGE
-			WHERE CONSTRAINT_SCHEMA = $dbName AND REFERENCED_TABLE_NAME IS NOT NULL
-			ORDER BY TABLE_NAME, REFERENCED_TABLE_NAME, POSITION_IN_UNIQUE_CONSTRAINT", PDO::FETCH_ASSOC);
+		try {
+			$Q = $this->getDbh()->query("SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+				FROM information_schema.KEY_COLUMN_USAGE
+				WHERE CONSTRAINT_SCHEMA = $dbName AND REFERENCED_TABLE_NAME IS NOT NULL
+				ORDER BY TABLE_NAME, REFERENCED_TABLE_NAME, POSITION_IN_UNIQUE_CONSTRAINT", PDO::FETCH_ASSOC);
+		}
+		catch (PDOException $e) {
+			if (self::ERR_DENIED != $e->getCode()) throw $e;
+			$cache->set(null);
+			return null; 
+		}
 		$result = array();
 		$tr = $this->getTranslator();
 		foreach($Q as $R) {
