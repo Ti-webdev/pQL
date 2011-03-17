@@ -86,6 +86,7 @@ abstract class pQL_Object implements ArrayAccess {
 		if (!is_object($result) and $this->isPropertyObject($property)) {
 			// если найдено свойство, значит id определен
 			if ($found) {
+				if (is_null($result)) return null;
 				$result = $this->getDriver()->getObjectProperty($this, $property, $result);
 			} 
 			// иначе нужно его загрузить
@@ -108,12 +109,12 @@ abstract class pQL_Object implements ArrayAccess {
 	}
 	
 	
-	private function loadProperty($property) {
+	function loadProperty($property) {
 		if (!$this->properties) return null;
 
 		$model = $this->getModel();
 		if (!$this->getDriver()->propertyExists($model, $property)) throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property': field not exists");
-
+		
 		$table = $this->getDriver()->modelToTable($model);
 		$pk = $this->getDriver()->getTablePrimaryKey($table);
 		if (!$pk) throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property': primary key not found");

@@ -624,7 +624,12 @@ abstract class pQL_Driver {
 	final function loadObjectProperty(pQL_Object $object, $property) {
 		$key = $this->getObjectPropertyForeignKeyCached($object->getModel(), $property);
 		$propertyId = $this->fieldToProperty(reset($key['from']));
-		$id = $object->get($propertyId);
+		
+		if ($property == $propertyId) $id = $object->loadProperty($property);
+		else $id = $object->get($propertyId);
+		
+		if (is_null($id)) return null;
+		
 		$foreignModel = $this->tableToModel($key['table']);
 		$foreignProperty = $this->fieldToProperty(reset($key['to']));
 		return $this->findByField($foreignModel, $foreignProperty, $id);

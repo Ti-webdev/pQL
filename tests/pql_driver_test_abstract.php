@@ -798,6 +798,40 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	}
+	
+	
+	function testGetNullForEmptyForeignObjectProperty() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(id ".$this->getPKExpr().", val VARCHAR(255)) $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), a INT, FOREIGN KEY(a) REFERENCES pql_test_a(id)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a(val) VALUES('first')");
+		$aId = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(val) VALUES('b_first')");
+		$bId = $this->lastInsertId();
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$b = $this->pql()->testB($bId);
+		$this->assertNull($b->a);
+		
+		$b = $this->pql()->testB();
+		$b->val = 'b_middle';
+		$b->save();
+		$this->assertNull($b->a);
+
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
+	
 
 
 	function testForeignObjectUsingForeingKeyAndNotPK() {
