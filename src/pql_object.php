@@ -101,12 +101,7 @@ abstract class pQL_Object implements ArrayAccess {
 		}
 
 		if (!$found) {
-			if ($this->loadProperty($property)) {
-				return $this->properties[$property];
-			}
-			else {
-				throw new pQL_Object_Exception_PropertyNotExists("'".$this->getModel().".$property' not found");
-			}
+			$result = $this->loadProperty($property);
 		}
 
 		return $result;
@@ -114,30 +109,27 @@ abstract class pQL_Object implements ArrayAccess {
 	
 	
 	private function loadProperty($property) {
-		if (!$this->properties) {
-			$this->properties[$property] = null;
-			return true;
-		}
+		if (!$this->properties) return null;
 
 		$model = $this->getModel();
-		if (!$this->getDriver()->propertyExists($model, $property)) return false;
-		
+		if (!$this->getDriver()->propertyExists($model, $property)) throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property': field not exists");
+
 		$table = $this->getDriver()->modelToTable($model);
 		$pk = $this->getDriver()->getTablePrimaryKey($table);
-		if (!$pk) return false;
+		if (!$pk) throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property': primary key not found");
 		
 		$query = $this->pQL->creater()->{$this->getModel()};
 		foreach($pk as $pkField) {
 			$pkProperty = $this->getDriver()->fieldToProperty($pkField);
-			if (!isset($this->properties[$pkProperty])) return false;
+			if (!isset($this->properties[$pkProperty])) throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property': primary key property '".$this->getModel().".$pkProperty' not set in object");
 			$id = $this->properties[$pkProperty];
 			$query->$pkProperty->in($id);
 		}
 		foreach($query->$property as $result) {
 			$this->properties[$property] = $result;
-			return true;
+			return $result;
 		}
-		return false;
+		throw new pQL_Object_Exception_PropertyNotExists("Unable lazy load property '".$this->getModel().".$property' record not found");
 	}
 
 

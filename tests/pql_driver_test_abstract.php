@@ -422,7 +422,16 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 	function testGetPropertyOnNewObject() {
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		
 		$this->assertNull($this->pql()->test()->id);
+		
+		$this->assertNull($this->pql()->test()->set('val', 123)->id);
+		
+		$object = $this->pql()->test();
+		$val = $object->val;
+		
+		$this->assertNull($object->id);
+		
 		$this->assertNull($this->pql()->test()->val);
 	}
 
