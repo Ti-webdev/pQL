@@ -658,4 +658,15 @@ abstract class pQL_Driver {
 		}
 		return false;
 	}
+	
+	
+	final function modelExists($model) {
+		$table = $this->modelToTable($model);
+		return in_array($table, $this->getTablesCached());
+	}
+	
+	
+	final function fieldExists($table, $field) {
+		return in_array($field, $this->getFieldsCachedNames($table));
+	}
 }

@@ -4,7 +4,7 @@
  * @author Ti
  * @package pQL
  */
-final class pQL_Creater {
+final class pQL_Creater implements ArrayAccess {
 	function __construct(pQl $pql) {
 		$this->pQL = $pql;
 	}
@@ -31,5 +31,25 @@ final class pQL_Creater {
 	function __get($key) {
 		$q = new pQL_Query($this->pQL->driver());
 		return $q->$key;
+	}
+	
+
+	function offsetExists($offset) {
+		return $this->pQL->driver()->modelExists($offset);
+	}
+
+
+	function offsetGet($offset) {
+		return $this->__get($offset);
+	}
+
+
+	function offsetSet($offset, $value) {
+		throw new RuntimeException('Not implementd');
+	}
+
+	
+	function offsetUnset($offset) {
+		throw new RuntimeException('Not implementd');
 	}
 }

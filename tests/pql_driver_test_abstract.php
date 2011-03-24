@@ -787,6 +787,24 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$q = $this->pql()->test['val'];
 		$this->assertEquals($vals, $q->toArray(), "SQL: $q");
 	}
+	
+	
+	function testOffsetTableExists() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		$pql = $this->pql();
+		$this->assertTrue(isset($pql['test']));
+		$this->assertFalse(isset($pql['waka']));
+	}
+	
+	
+	function testOffsetFieldExists() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		$this->assertTrue(isset($this->pql()->test['val']));
+		$this->assertFalse(isset($this->pql()->test['wtf']));
+		$pql = $this->pql();
+		$this->assertTrue(isset($pql['test']['val']));
+		$this->assertFalse(isset($pql['test']['wtf']));
+	}
 
 
 	function testForeignObjectUsingForeingKey() {
