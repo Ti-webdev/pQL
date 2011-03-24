@@ -3,7 +3,7 @@
  * @author Ti
  * @package pQL
  */
-final class pQL_Query implements IteratorAggregate, Countable {
+final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	function __construct(pQL_Driver $driver) {
 		$this->driver = $driver;
 		$this->builder = new pQL_Query_Builder;
@@ -203,6 +203,14 @@ final class pQL_Query implements IteratorAggregate, Countable {
 		$this->cleanResult();
 		if ($this->field) $this->bindField($var);
 		else $this->bindTable($var);
+		return $this;
+	}
+	
+	
+	function group() {
+		$this->cleanResult();
+		$field = $this->getField();
+		$this->builder->addGroup($field);
 		return $this;
 	}
 
@@ -421,5 +429,25 @@ final class pQL_Query implements IteratorAggregate, Countable {
 
 	function delete() {
 		return $this->driver->exec($this->builder->getDeleteSQL($this->driver));
+	}
+	
+
+	function offsetExists($offset) {
+		throw new RuntimeException('Not implementd');
+	}
+
+
+	function offsetGet($offset) {
+		return $this->__get($offset);
+	}
+
+
+	function offsetSet($offset, $value) {
+		throw new RuntimeException('Not implementd');
+	}
+
+	
+	function offsetUnset($offset) {
+		throw new RuntimeException('Not implementd');
 	}
 }

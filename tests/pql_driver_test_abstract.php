@@ -541,6 +541,18 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testFieldGroup() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$vals = array('one', 'two', 'three');
+		for($i = 0; $i < 10; $i++) {
+			foreach($vals as $val) $this->exec("INSERT INTO pql_test(val) VALUES(".$this->quote($val).")");
+		}
+		
+		$q = $this->pql()->test->val->group()->value()->id->asc();
+		$this->assertEquals($vals, $q->toArray(), "SQL: $q");
+	}
+	
+	
 	function testSaveForeignObject() {
 		$this->pql->coding(new pQL_Coding_Typical);
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().")");
@@ -765,6 +777,16 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertType('pQL_Object', $b->test);
 		$this->assertEquals('first', $b->test->val);
 	}
+	
+	
+	function testQueryOffsetGet() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		$vals = array('one', 'two', 'three', null);
+		foreach($vals as $val) $this->exec("INSERT INTO pql_test(val) VALUES(".$this->quote($val).")");
+		
+		$q = $this->pql()->test['val'];
+		$this->assertEquals($vals, $q->toArray(), "SQL: $q");
+	}
 
 
 	function testForeignObjectUsingForeingKey() {
@@ -864,8 +886,8 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	}
-
-
+	
+	
 	/**
 	 * @TODO
 	 */
@@ -922,10 +944,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 
 
-	/**
-	 * @TODO
-	 */
-	function _testNotFoundByPk() {
+	function testNotFoundByPk() {
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
 		$this->exec("INSERT INTO pql_test(val) VALUES('first')");
 		$this->assertNull($this->pql()->test(6));

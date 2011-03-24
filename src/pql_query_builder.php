@@ -10,12 +10,14 @@ final class pQL_Query_Builder {
 	function __construct() {
 		$this->where = new pQL_Query_Expr;
 		$this->orderBy = new pQL_Query_Expr;
+		$this->groupBy = new pQL_Query_Expr;
 	}
 
 
 	function __clone() {
 		$this->where = clone $this->where;
 		$this->orderBy = clone $this->orderBy;
+		$this->groupBy = clone $this->groupBy;
 	}
 
 
@@ -181,6 +183,14 @@ final class pQL_Query_Builder {
 		$args = is_array($expr) ? $expr : func_get_args();
 		foreach($args as $arg) $this->where->push($arg);
 	}
+	
+	
+	private $groupBy;
+	function addGroup($expr) {
+		$this->groupBy->push($this->groupBy->isEmpty() ? ' GROUP BY ' : ', ');
+		$args = is_array($expr) ? $expr : func_get_args();
+		foreach($args as $arg) $this->groupBy->push($arg);
+	}
 
 
 	private $limit = 0;
@@ -223,7 +233,8 @@ final class pQL_Query_Builder {
 
 
 	function getSQL(pQL_Driver $driver) {
-		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $this->orderBy->get($this));
+		$suffix = $this->groupBy->get($this).$this->orderBy->get($this);
+		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $suffix);
 		return $sql;
 	}
 
