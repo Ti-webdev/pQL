@@ -27,8 +27,8 @@ class pQL_Tests_Suite extends PHPUnit_Framework_TestSuite {
 	public static function suite() {
 		return new self;
 	}
-	
-	
+
+
 	static function main() {
 		PHPUnit_TextUI_TestRunner::run(self::suite());
 	}

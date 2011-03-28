@@ -6,15 +6,31 @@
  */
  
 class pQL_Query_Expr {
-	function __construct($expr = null) {
-		if (!is_null($expr)) $this->push($expr);
+	function __construct($prefix = '', $suffix = '') {
+		$this->prefix = $prefix;
+		$this->suffix = $suffix;
 	}
 
 
 	private $expr = '';
 	private $injections = array();
+	private $isPrefix = true;
+	private $prefix;
+	private $suffix;
+	
+	
+	function pushArray($args) {
+		if ($this->isPrefix) {
+			$this->expr .= $this->prefix;
+			$this->isPrefix = false;
+		}
+		else {
+			$this->expr .= $this->suffix;
+		}
+		foreach($args as $arg) $this->push($arg);
+	}
 
-
+	
 	function push($expr) {
 		if (is_object($expr) and $expr instanceof pQL_Query_Builder_Field) {
 			$pos = strlen($this->expr);

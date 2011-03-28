@@ -8,16 +8,18 @@
 final class pQL_Query_Builder {
 	private $registeredTables = array();
 	function __construct() {
-		$this->where = new pQL_Query_Expr;
-		$this->orderBy = new pQL_Query_Expr;
-		$this->groupBy = new pQL_Query_Expr;
+		$this->setExpr = new pQL_Query_Expr(' SET ', ', ');
+		$this->whereExpr = new pQL_Query_Expr(' WHERE ', ' AND ');
+		$this->groupByExpr = new pQL_Query_Expr(' GROUP BY ', ', ');
+		$this->orderByExpr = new pQL_Query_Expr(' ORDER BY ', ', ');
 	}
 
 
 	function __clone() {
-		$this->where = clone $this->where;
-		$this->orderBy = clone $this->orderBy;
-		$this->groupBy = clone $this->groupBy;
+		$this->setExpr = clone $this->setExpr;
+		$this->whereExpr = clone $this->whereExpr;
+		$this->groupByExpr = clone $this->groupByExpr;
+		$this->orderByExpr = clone $this->orderByExpr;
 	}
 
 
@@ -163,7 +165,7 @@ final class pQL_Query_Builder {
 	/**
 	 * @return string выражение FROM включая все JOIN
 	 */
-	private function getSQLFrom($withAlias = true) {
+	private function getSQLFrom($withAlias = true, $from = ' FROM ') {
 		$result = '';
 		foreach($this->tables as $tableNum=>$rTable) {
 			if ($tableNum) $result .= ', ';
@@ -173,26 +175,35 @@ final class pQL_Query_Builder {
 				$result .= $this->getTableAlias($rTable);
 			}
 		}
-		return ' FROM '.$result;
+		return $from.$result;
 	}
 
 
-	private $where;
-	function addWhere($expr) {
-		$this->where->push($this->where->isEmpty() ? ' WHERE ' : ' AND ');
-		$args = is_array($expr) ? $expr : func_get_args();
-		foreach($args as $arg) $this->where->push($arg);
+	private $setExpr;
+	private $whereExpr;
+	private $groupByExpr;
+	private $orderByExpr;
+	
+	
+	function addSet($arg) {
+		$this->setExpr->pushArray(is_array($arg) ? $arg : func_get_args());
 	}
 	
 	
-	private $groupBy;
-	function addGroup($expr) {
-		$this->groupBy->push($this->groupBy->isEmpty() ? ' GROUP BY ' : ', ');
-		$args = is_array($expr) ? $expr : func_get_args();
-		foreach($args as $arg) $this->groupBy->push($arg);
+	function addWhere($arg) {
+		$this->whereExpr->pushArray(is_array($arg) ? $arg : func_get_args());
 	}
-
-
+	
+	
+	function addGroup($arg) {
+		$this->groupByExpr->pushArray(is_array($arg) ? $arg : func_get_args());
+	}
+	
+	
+	function addOrder($arg) {
+		$this->orderByExpr->pushArray(is_array($arg) ? $arg : func_get_args());
+	}
+	
 	private $limit = 0;
 	function setLimit($limit) {
 		$this->limit = (int) $limit;
@@ -210,13 +221,6 @@ final class pQL_Query_Builder {
 	}
 	
 	
-	private $orderBy;
-	function addOrder($expr) {
-		$this->orderBy->push($this->orderBy->isEmpty() ? ' ORDER BY ' : ', ');
-		$args = is_array($expr) ? $expr : func_get_args();
-		foreach($args as $arg) $this->orderBy->push($arg);
-	}
-	
 	
 	private function getLimitExpr(pQL_Driver $driver) {
 		return rtrim(' '.$driver->getLimitExpr($this->offset, $this->limit));
@@ -227,13 +231,13 @@ final class pQL_Query_Builder {
 	 * Возращает часть запроса, начиная с FROM до ORDER BY
 	 */
 	function getSQLSuffix(pQL_Driver $driver, $suffix = '') {
-		$where = $this->where->get($this);
+		$where = $this->whereExpr->get($this);
 		return $this->getSQLFrom().$where.$suffix.$this->getLimitExpr($driver);
 	}
 
 
 	function getSQL(pQL_Driver $driver) {
-		$suffix = $this->groupBy->get($this).$this->orderBy->get($this);
+		$suffix = $this->groupByExpr->get($this).$this->orderByExpr->get($this);
 		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $suffix);
 		return $sql;
 	}
@@ -241,10 +245,29 @@ final class pQL_Query_Builder {
 
 	function getDeleteSQL(pQL_Driver $driver) {
 		if (!$this->tables) $this->addTable(reset($this->registeredTables));
+		
+		$result = 'DELETE ';
+		$result .= $this->getSQLFrom(false);
+		$result .= $this->whereExpr->get($this, false);
+		
 		$limit = $this->getLimit($driver);
-		$where = $this->where->get($this, false);
-		$result = 'DELETE '.$this->getSQLFrom(false).$where;
-		if ($limit) $result .= $this->orderBy->get($this, false).$limit;
+		if ($limit) $result .= $this->orderByExpr->get($this, false).$limit;
+
+		return $result;
+	}
+	
+	
+	function getUpdateSQL(pQL_Driver $driver) {
+		if (!$this->tables) $this->addTable(reset($this->registeredTables));
+		
+		$result = 'UPDATE ';
+		$result .= $this->getSQLFrom(false, '');
+		$result .= $this->setExpr->get($this, false);
+		$result .= $this->whereExpr->get($this, false);
+		
+		$limit = $this->getLimit($driver);
+		if ($limit) $result .= $this->orderByExpr->get($this, false).$limit;
+
 		return $result;
 	}
 }

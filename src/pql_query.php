@@ -396,9 +396,8 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		$this->assertTableDefined();
 		if (!$this->field) throw new pQL_Exception('Select property first!');
 	}
-	
-	
-	
+
+
 	private function joinCurrentTable() {
 		$this->driver->joinTable($this->mediator, $this->table);
 	}
@@ -431,6 +430,14 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		return $this->driver->exec($this->builder->getDeleteSQL($this->driver));
 	}
 	
+	
+	function set($value) {
+		$field = $this->getField();
+		$qValue = $this->driver->getParam($value);
+		$this->builder->addSet($field,' = ', $qValue);
+		return $this;
+	}
+	
 
 	function offsetExists($offset) {
 		if ($this->table) {
@@ -455,5 +462,10 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	
 	function offsetUnset($offset) {
 		throw new RuntimeException('Not implementd');
+	}
+	
+	
+	function update() {
+		return $this->driver->exec($this->builder->getUpdateSQL($this->driver));
 	}
 }
