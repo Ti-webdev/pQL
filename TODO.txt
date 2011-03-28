@@ -1,4 +1,3 @@
-- ленивая загрузка
 - подстановки для IDE
 - namespace objects
 - countAll() - COUNT(*)

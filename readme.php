@@ -38,7 +38,7 @@ $phone->save();
 $user = db()->user($id);
 
 // field iterator
-foreach(db()->phoneNumber->user->is($user)->number as $number) {
+foreach(db()->phoneNumber->user->in($user)->number as $number) {
 	echo "$number<br />";
 }
 
@@ -47,29 +47,22 @@ foreach(db()->user->id->key()->name as $id=>$name) {
 	echo "$id: $name\n";
 }
 
-// TODO: custom select query
+// custom select query
 $list =   db()->user->login->in('guset', 'anonimous')
 		->db()->phoneNumber->number->like('%678%');
 foreach($list as $foundUser) {
 	echo "$foundUser<br />";
 }
 
-// TODO: жадная выборка: привязка переменной
+// жадная выборка: привязка переменной
 foreach(db()->user->phoneNumber->bind($phone) as $user) {
 	echo "$user->name: $phone->number <br />";
 }
 
 
-// TODO: жадная выборка: коллекция
-// ЧЕРОНОВИК!
-foreach(db()->user->phoneNumber->add() as $collection) {
-	echo "{$collection->user->name}: {$collection->phone->number}<br />";
-}
 
 // цепочки условий к одному полю:
 db()->table->field->not(null)->between(10, 25)->in($vals);
-
-# DONE
 
 // SQL: ... WHERE field = value
 db()->table->field->in($value);
@@ -113,46 +106,17 @@ db()->table->field->between($min, $max);
 // SQL: ... ORDER BY RANDOM()
 db()->table->random();
 
-// SQL: UPDATE table SET field1 = field1 * field2 / 5 WHERE field3 < 6
-$t = db()->table;
-$affectRows = $t->field1->set("$t->field1 * $t->field2 / 5")->field3->lt(6)->update();
-
 // SQL: DELETE FROM table
 $deleteRows = db()->table->delete();
 
 // SQL: DELETE FROM table WHERE id = 67
-$deleteRows = db()->table->id->is(67)->delete();
+$deleteRows = db()->table->id->in(67)->delete();
 
 // SQL: ... LIMIT 20, 10.....
 db()->table->limit(10)->offset(20);
 
-// SQL: ... ORDER BY field1, filed2 DESC
-db()->table->field1->asc()->filed2->desc();
-
-// SQL: SELECT a+b FROM table WHERE c LIKE 'waka%'
-// Чероновик 
-foreach(db()->table->select('a+b')->c->like('waka') as $sum) {
-	echo "a+b: $sum";
-}
-
-// SQL: SELECT a+b, c+d FROM table
-// Чероновик
-foreach(db()->table->select('a+b', 'sum1')->select('c+d', 'sum2') as $collection) {
-	echo "a + b = $collection->sum1; c + d = $collection->sum2<br />";
-}
-
 // Show SQL
 echo db()->table->id->in(1,2,3); // SELECT * FROM table WHERE id IN (1,2,3)
-
-// RIGHT JOIN
-// LEFT JOIN
-// INNER JOIN
-// SQL SELECT * FROM table WHERE field IN ($subsql)
-// Чероновик
-db()->table->field->in()->sql($subsql);
-
-// SQL: SELECT * FROM user LIMIT 1
-$user = db()->user->one();
 
 
 // get num rows in SELECT
@@ -161,3 +125,46 @@ $count = count($q);
 foreach($q as $user) {
 	echo $user;
 }
+
+// SQL: SELECT * FROM user LIMIT 1
+$user = db()->user->one();
+
+# /DONE
+
+
+
+
+
+/**
+ * TODO
+ * ЧЕРОНОВИК:
+ */
+
+// жадная выборка: коллекция
+
+foreach(db()->user->phoneNumber->add() as $collection) {
+	echo "{$collection->user->name}: {$collection->phone->number}<br />";
+}
+
+// SQL: UPDATE table SET field1 = field1 * field2 / 5 WHERE field3 < 6
+$t = db()->table;
+$affectRows = $t->field1->set("$t->field1 * $t->field2 / 5")->field3->lt(6)->update();
+
+// SQL: ... ORDER BY field1, filed2 DESC
+db()->table->field1->asc()->filed2->desc();
+
+// SQL: SELECT a+b FROM table WHERE c LIKE 'waka%'
+foreach(db()->table->select('a+b')->c->like('waka') as $sum) {
+	echo "a+b: $sum";
+}
+
+// SQL: SELECT a+b, c+d FROM table
+foreach(db()->table->select('a+b', 'sum1')->select('c+d', 'sum2') as $collection) {
+	echo "a + b = $collection->sum1; c + d = $collection->sum2<br />";
+}
+
+// RIGHT JOIN
+// LEFT JOIN
+// INNER JOIN
+// SQL SELECT * FROM table WHERE field IN ($subsql)
+db()->table->field->in()->sql($subsql);
