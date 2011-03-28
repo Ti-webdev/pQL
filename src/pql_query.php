@@ -226,6 +226,22 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	}
 
 
+	const MAX_RECURSIVE_LEVEL = 10000;
+	private function getArgsRecursive($args, $level = 0) {
+		$result = array();
+		foreach($args as $arg) {
+			if (is_array($arg) or (is_object($arg) and !$arg instanceof pQL_Object and $arg instanceof Traversable)) {
+				if (self::MAX_RECURSIVE_LEVEL < $level) throw new RuntimeException('Recursive level over limit'); 
+				$result = array_merge($result, $this->getArgsRecursive($arg, $level + 1));
+			}
+			else {
+				$result[] = $arg;
+			}
+		}
+		return $result;
+	}
+
+
 	private function addArgsExpr($args, $in, $equals, $operator, $nullFn) {
 		$field = $this->getField(); 
 		$this->cleanResult();
@@ -233,13 +249,16 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		// собираем параметры
 		$orNull = false;
 		$expression = array();
-		$vals = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
+		$vals = $this->getArgsRecursive($args);
 		foreach($vals as $val) {
 			if (is_null($val)) {
 				$orNull = true;
 			}
 			else {
 				if ($expression) $expression[] = ',';
+				if (is_object($val) and $val instanceof pQL_Object) {
+					$val = $this->driver->getPrimaryKeyValue($val);
+				}
 				$expression[] = $this->driver->getParam($val);
 			}
 		}

@@ -1200,6 +1200,44 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	}
+	
+	
+	function testExprWithForeignObject() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+
+		$createOpt = stripos(get_class($this), 'mysql') ? ' engine=INNODB' : '';
+
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_a(val VARCHAR(255), id ".$this->getPKExpr().") $createOpt");
+		$this->exec("CREATE TABLE pql_test_b(val VARCHAR(255), id ".$this->getPKExpr().", a INT, FOREIGN KEY(a) REFERENCES pql_test_a(id)) $createOpt");
+
+		// записи
+		$this->exec("INSERT INTO pql_test_a(id, val) VALUES(1, 'aa_first')");
+		$this->exec("INSERT INTO pql_test_a(id, val) VALUES(2, 'aa_second1')");
+		$this->exec("INSERT INTO pql_test_a(id, val) VALUES(3, 'aa_second2')");
+		$this->exec("INSERT INTO pql_test_a(id, val) VALUES(4, 'aa_last')");
+		$this->exec("INSERT INTO pql_test_b(id, a, val) VALUES(1, 1, 'b_first')");
+		$this->exec("INSERT INTO pql_test_b(id, a, val) VALUES(2, 2, 'b_second')");
+		$this->exec("INSERT INTO pql_test_b(id, a, val) VALUES(3, 1, 'b_last')");
+
+		// pql
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		// test
+		$a = $this->pql()->testA(2);
+
+		// test IN
+		$b = $this->pql()->testB->a->in($a)->one();
+		$this->assertEquals('b_second', $b->val);
+
+		// test NOT
+		$this->assertEquals(array('b_first', 'b_last'), $this->pql()->testB->a->not($a)->val->toArray());
+
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
+	}
 
 
 	function testQueryByObject() {
@@ -1223,9 +1261,15 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		// pql
 		$this->pql->coding(new pQL_Coding_Typical);
+		
+		// test
 		$a = $this->pql()->testA->aa->in('aa_second2')->one();
 		$b = $this->pql()->testB->with($a)->one();
 		$this->assertEquals('ba2', $b->ba);
+		
+		// tearDown
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 	}
 
 

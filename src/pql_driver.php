@@ -226,6 +226,17 @@ abstract class pQL_Driver {
 		}
 		return $result;
 	}
+	
+	
+	final function getPrimaryKeyValue(pQL_Object $object) {
+		$model = $object->getModel();
+		$table = $this->modelToTable($model);
+		$pk = $this->getTablePrimaryKey($table);
+		if (!$pk) throw new InvalidArgumentException("Primary key of '".$this->translator->removeDbQuotes($table)."' not defined");
+		if (1 < count($pk)) throw new InvalidArgumentException("Primary key of '".$this->translator->removeDbQuotes($table)."' is composite");
+		$property = $this->fieldToProperty(reset($pk));
+		return $object->get($property);
+	}
 
 
 	/**
