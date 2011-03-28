@@ -135,7 +135,7 @@ abstract class pQL_Object implements ArrayAccess {
 
 
 	private function isPropertyObject($property) {
-		return $this->getDriver()->isObjectProperty($this->getModel(), $property);
+		return $this->getDriver()->isPropertyObject($this->getModel(), $property);
 	}
 
 

@@ -6,6 +6,11 @@ final class pQL_Cache_Element {
 		$this->cache = $cache;
 		$this->key = $key;
 	}
+	
+	
+	function setKey($key) {
+		$this->key = $key;
+	}
 
 	
 	function exists() {

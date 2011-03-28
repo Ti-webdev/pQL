@@ -611,7 +611,7 @@ abstract class pQL_Driver {
 	 * @param string $model
 	 * @param string $property
 	 */
-	final function isObjectProperty($model, $property) {
+	final function isPropertyObject($model, $property) {
 		return (bool) $this->getObjectPropertyForeignKeyCached($model, $property);
 	}
 
