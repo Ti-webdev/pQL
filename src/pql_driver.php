@@ -333,7 +333,7 @@ abstract class pQL_Driver {
 
 			$fields2 = next($join);
 			$table2 = $builder->registerTable(key($join));
-
+			
 			foreach($fields1 as $i=>$field1) {
 				$bField1 = $builder->registerField($table1, $field1);
 				$bField2 = $builder->registerField($table2, $fields2[$i]);

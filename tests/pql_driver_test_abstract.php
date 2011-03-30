@@ -642,12 +642,47 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$this->exec("DROP TABLE pql_test_b");
 	}
+	
+	
+	/**
+	 * @todo
+	 */
+	function _testJoinUsingNames() {
+		$this->exec("
+			CREATE TABLE IF NOT EXISTS `type_tovar` (
+			  `id_type` ".$this->getPKExpr().",
+			  `name` varchar(255) NOT NULL DEFAULT ''
+			)");
+		$this->exec("
+			CREATE TABLE IF NOT EXISTS `tovars` (
+			  `id_tovar` ".$this->getPKExpr().",
+			  `id_type` int(11) NOT NULL DEFAULT '0',
+			  `name` varchar(255) NOT NULL DEFAULT ''
+			)");
+
+		$this->exec("INSERT INTO `type_tovar`(id_type, name) VALUES (1, 'first_type')");
+		$this->exec("INSERT INTO `type_tovar`(id_type, name) VALUES (3, 'second_type')");
+		$this->exec("INSERT INTO `type_tovar`(id_type, name) VALUES (2, 'last_type')");
+
+		$this->exec("INSERT INTO `tovars`(id_tovar, id_type, name) VALUES (10, 1, 'first')");
+		$this->exec("INSERT INTO `tovars`(id_tovar, id_type, name) VALUES (20, 3, 'last')");
+
+		$this->pql->tablePrefix('');
+		echo $this->pql()->type_tovar
+			->id_type->group()
+			->db()->tovars->id_tovar->in(10,20);
+			echo "\n";
+		exit;
+
+		$this->exec("DROP TABLE IF EXISTS `type_tovar`");
+		$this->exec("DROP TABLE IF EXISTS `tovars`");
+	}
 
 
-	function testJoinSelf() {
-		/**
-		 * @todo
-		 */
+	/**
+	 * @todo
+	 */
+	function _testJoinSelf() {
 	}
 	
 	
