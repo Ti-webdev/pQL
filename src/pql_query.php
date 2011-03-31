@@ -401,7 +401,8 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 
 	private function setField($propertyName) {
 		$name = $this->driver->propertyToField($propertyName);
-		$this->field = $this->builder->registerField($this->table, $name);
+		$nameId = $this->driver->getFieldNameId($this->table->getName(), $name);
+		$this->field = $this->builder->registerField($this->table, $nameId);
 		$this->mediator->setField($this->field);
 	}
 

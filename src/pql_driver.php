@@ -293,6 +293,33 @@ abstract class pQL_Driver {
 	final function propertyToField($property) {
 		return $this->getTranslator()->propertyToField($property);
 	}
+	
+	
+	/**
+	 * Возращает первое существующее поле
+	 * в таблице $tableName: $fieldName, {$fieldName}_id, id_{$fieldName}
+	 * 
+	 * @param string $tableName
+	 * @param string $fieldName
+	 */
+	final function getFieldNameId($tableName, $fieldName) {
+		$fieldName = $this->getTranslator()->removeDbQuotes($fieldName);
+		$idFields = array(
+			$fieldName,
+			$fieldName.'_id',
+			'id_'.$fieldName,
+		);
+
+		$allFields = $this->getTableFields($tableName);
+
+		foreach($idFields as $fieldNameId) {
+			foreach($allFields as $field) {
+				if (0 === strcasecmp($fieldNameId, $field->getName())) return $fieldNameId;
+			}
+		}
+	
+		throw new InvalidArgumentException("Field $tableName.$fieldName not found");
+	}
 
 
 	final function fieldToProperty($field) {
