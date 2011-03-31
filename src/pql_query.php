@@ -462,7 +462,12 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	function offsetExists($offset) {
 		if ($this->table) {
 			$field = $this->driver->propertyToField($offset);
-			return $this->driver->fieldExists($this->table->getName(), $field);
+			try {
+				return (bool) $this->driver->getFieldNameId($this->table->getName(), $field);
+			}
+			catch (InvalidArgumentException $e) {
+				return false;
+			}
 		}
 		else {
 			return $this->driver->modelExists($offset);
