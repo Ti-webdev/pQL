@@ -843,6 +843,28 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testForeignKeyNameSave() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
+		// записи
+		$this->exec("INSERT INTO pql_test(id, val) VALUES(1, 'first')");
+		$this->exec("INSERT INTO pql_test(id, val) VALUES(2, 'second')");
+		$this->exec("INSERT INTO pql_test(id, val) VALUES(3, 'last')");
+		
+		$this->pql->coding(new pQL_Coding_Typical);
+		
+		$a = $this->pql()->test(2);
+		$b = $this->pql()->testB();
+		$b->test = $a;
+		$b->save();
+		
+		$this->assertEquals(2, $this->queryValue("SELECT test_id FROM pql_test_b WHERE id = $b->id LIMIT 1"));
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+	}
+	
+	
 	function testQueryOffsetGet() {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
 		$vals = array('one', 'two', 'three', null);

@@ -126,11 +126,12 @@ abstract class pQL_Driver {
 		}
 		foreach($newProperties as $key=>$value) {
 			$field = $tr->propertyToField($key);
+			$fieldId = $this->getFieldNameId($table, $field);
 			
 			// foreignTable
 			if ($this->isPqlObject($value)) $value = $this->getPqlId($value);
 			
-			$fields[] = $field;
+			$fields[] = $fieldId;
 			$values[] = $value;
 		}
 		if ($isUpdate) {
@@ -303,6 +304,9 @@ abstract class pQL_Driver {
 	 * @param string $fieldName
 	 */
 	final function getFieldNameId($tableName, $fieldName) {
+		$cache = $this->cache("$tableName.$fieldName");
+		if ($cache->exists()) return $cache->get();
+
 		$fieldName = $this->getTranslator()->removeDbQuotes($fieldName);
 		$idFields = array(
 			$fieldName,
@@ -314,7 +318,10 @@ abstract class pQL_Driver {
 
 		foreach($idFields as $fieldNameId) {
 			foreach($allFields as $field) {
-				if (0 === strcasecmp($fieldNameId, $field->getName())) return $fieldNameId;
+				if (0 === strcasecmp($fieldNameId, $field->getName())) {
+					$cache->set($this->getTranslator()->addDbQuotes($fieldNameId));
+					return $fieldNameId;
+				}
 			}
 		}
 	
@@ -497,14 +504,14 @@ abstract class pQL_Driver {
 
 
 	private function getForeignKeysCached($table) {
-		$cache = $this->cache("fk:$table");
+		$cache = $this->cache("$table:fk");
 		if (!$cache->exists()) $cache->set($this->getForeignKeys($table));
 		return $cache->get();
 	}
 
 
 	private function getFieldsCached($table) {
-		$cache = $this->cache("f:$table");
+		$cache = $this->cache("$table:fields");
 		if (!$cache->exists()) $cache->set($this->getTableFields($table));
 		return $cache->get();	
 	}
@@ -638,7 +645,7 @@ abstract class pQL_Driver {
 
 
 	private function getObjectPropertyForeignKeyCached($model, $property) {
-		$cache = $this->cache("$model $property");
+		$cache = $this->cache("$model:$property:fk");
 		if (!$cache->exists()) $cache->set($this->getObjectPropertyForeignKey($model, $property));
 		return $cache->get();
 	}
