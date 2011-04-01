@@ -891,9 +891,27 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertTrue(isset($pql['test']['val']));
 		$this->assertFalse(isset($pql['test']['wtf']));
 		$this->exec("DROP TABLE pql_test");
+		$this->pql->clearCache();
 		$this->exec("CREATE TABLE pql_test(fk_id INT)");
 		$this->assertTrue(isset($pql['test']['fk_id']));
 		$this->assertTrue(isset($pql['test']['fk']));
+	}
+	
+	
+	function testObjectPropertyExists() {
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(255))");
+		$this->assertTrue(isset($this->pql()->test['val']));
+		$this->assertFalse(isset($this->pql()->test['wtf']));
+		$object = $this->pql()->test();
+		$this->assertTrue(isset($object['val']));
+		$this->assertFalse(isset($object['wtf']));
+		$this->exec("DROP TABLE pql_test");
+		
+		$this->exec("CREATE TABLE pql_test(fk_id INT)");
+		$this->pql->clearCache();
+		$object = $this->pql()->test();
+		$this->assertTrue(isset($object['fk_id']));
+		$this->assertTrue(isset($object['fk']));
 	}
 
 
