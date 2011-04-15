@@ -400,10 +400,37 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		$this->table = $this->builder->registerTable($tableName);
 		$this->mediator->setTable($this->table);
 		
-		$filterManager = $this->driver->getQueryFilterManager();
-		if ($filterManager->exists($tableName)) {
-			$filterManager->apply($this, $tableName);
+		$filter = $this->driver->getQueryFilterManager()->get($tableName);
+		if ($filter) $this->applyFilter($filter);
+	}
+	
+	
+	function applyFilter(pQL_Query_Filter $filter, $args = array()) {
+		$filter->apply($this);
+		if ($filter->callback) {
+			// сохраняем текущие
+			$currentTable = $this->table;
+			$currentField = $this->field;
+
+			// ставим из фильтра
+			if ($currentTable->getName() !== $filter->tableName) {
+				$model = $this->driver->tableToModel($filter->tableName);
+				$this->db()->$mode;
+			}
+			if ($filter->fieldName) {
+				$property = $this->driver->fieldToProperty($filter->fieldName);
+				$this->$property;
+			}
+			
+			// выполняем
+			array_unshift($args, $this);
+			call_user_func_array($filter->callback, $args);
+
+			// восстанавливаем текущие
+			$this->table = $currentTable;
+			$this->field = $currentField;
 		}
+		$this->cleanResult();
 	}
 
 
@@ -505,9 +532,24 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 
 	function filter($name = null, $filterFunction = null) {
 		$this->assertTableDefined();
-		if (!is_null($name)) settype($name, 'string');
-		if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
-		$this->driver->getQueryFilterManager()->add($this->builder, $this->table->getName(), $name, $filterFunction);
+
+		// если аргумент один и это функция
+		if (1 === func_num_args() and is_callable($name)) {
+			$filterFunction = $name;
+			$name = null;
+		}
+		else {
+			if (!is_null($name)) settype($name, 'string');
+			if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
+		}
+		
+		$filter = new pQL_Query_Filter;
+		$filter->queryBuilder = $this->builder;
+		$filter->tableName = $this->table->getName();
+		$filter->callback = $filterFunction;
+		if ($this->field) $filter->fieldName = $this->field->getName();
+		
+		$this->driver->getQueryFilterManager()->add($name, $filter);
 		return $this;
 	}
 	
@@ -522,11 +564,13 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		if ($this->table) {
 			$filterManager = $this->driver->getQueryFilterManager();
 			$tableName = $this->table->getName();
-			if ($filterManager->exists($tableName, $filterName)) {
-				$filterManager->apply($this, $tableName, $filterName, $args);
+			$filter = $filterManager->get($tableName, $filterName);
+			if ($filter) {
+				if ($filter) $this->applyFilter($filter, $args);
 				return $this;
 			}
+			throw new ErrorException("Call to undefined method ".__CLASS__."::$filterName or filter ".$this->table->getName().".$filterName");
 		}
-		throw new ErrorException("Call to undefined method or filter ".__CLASS__."->$filterName");
+		throw new ErrorException("Call to undefined method ".__CLASS__."::$filterName");
 	}
 }
