@@ -866,6 +866,31 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testFilterWithJoin() {
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_id INT)");
+		// записи
+		for($i = 0; $i<10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$id = $this->lastInsertId();
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES(4, 'b_first')");
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES(5, 'b_second')");
+		$this->exec("INSERT INTO pql_test_b(test_id, val) VALUES(6, 'b_last')");
+		
+		$this->pql->coding(new pQL_Coding_Typical);
+		// filters
+		$this->pql()->test->id->filter(function($query) {
+			$query->not(3,5);
+		});
+		$this->pql()->test->db()->testB->val->filter();
+		
+		$this->assertEquals(array('b_first', 'b_last'), $this->pql()->testB->val->toArray());
+		
+		$this->exec("DROP TABLE pql_test_b");
+	}
+	
+	
 	function testForeignObject() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		// схема базы

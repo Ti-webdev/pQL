@@ -543,8 +543,11 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 			if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
 		}
 		
+		$query = clone $this;
+		$query->__toString();
+
 		$filter = new pQL_Query_Filter;
-		$filter->queryBuilder = $this->builder;
+		$filter->queryBuilder = $query->builder;
 		$filter->tableName = $this->table->getName();
 		$filter->callback = $filterFunction;
 		if ($this->field) $filter->fieldName = $this->field->getName();
