@@ -505,13 +505,8 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 
 	function filter($name = null, $filterFunction = null) {
 		$this->assertTableDefined();
-		if (is_null($name)) {
-			if ($filterFunction) throw new InvalidArgumentException("function not allowed to nameless filter");
-		}
-		else {
-			settype($name, 'string');
-			if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
-		}
+		if (!is_null($name)) settype($name, 'string');
+		if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
 		$this->driver->getQueryFilterManager()->add($this->builder, $this->table->getName(), $name, $filterFunction);
 		return $this;
 	}
