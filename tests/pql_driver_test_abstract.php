@@ -804,6 +804,40 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testQueryDefaultFilter() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$this->pql()->test->val->not(3,5)->filter();
+		$this->assertEquals(array(0,1,2,4,6,7,8,9), $this->pql()->test->val->toArray());
+	}
+	
+	
+	function testQueryNamedFilter() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$this->pql()->test->val->not(3,5)->filter('f35');
+		$this->pql()->test->val->in(0)->filter('f0');
+		$this->assertEquals(range(0,9), $this->pql()->test->val->toArray());
+		$this->assertEquals(array(0), $this->pql()->test->f0()->val->toArray());
+		$this->assertEquals(array(0,1,2,4,6,7,8,9), $this->pql()->test->f35()->val->toArray());
+	}
+	
+	
+	function testQueryNamedFilterParameters() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$this->pql()->test->val->not(3,5)->filter('test', array($this, 'setLimit'));
+		$this->assertEquals(range(0,9), $this->pql()->test->val->toArray());
+		$this->assertEquals(array(1,2,4,6,7,8), $this->pql()->test->test(1,6)->val->toArray());
+		$this->assertEquals(array(2,4,6,7,8,9), $this->pql()->test->test(2)->val->toArray());
+	}
+	
+	
+	function setLimit(pQL_Query $query, $offset, $limit = null) {
+		$query->offset($offset)->limit($limit);
+	}
+	
+	
 	function testForeignObject() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");
 		// схема базы

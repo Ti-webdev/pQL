@@ -23,7 +23,7 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 		// Если таблица установлена - устанавливаем поле
 		if ($this->table) $this->setField($name);
 		// Иначе устанавливаем талбицу
-		else $this->setTable($name);
+		else $this->setTableByModel($name);
 
 		return $this;
 	}
@@ -327,6 +327,9 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	}
 
 
+	/**
+	 * @todo if object is foreign key field - do without join 
+	 */
 	function with(pQL_Object $object) {
 		$this->cleanResult();
 
@@ -391,11 +394,16 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	/**
 	 * @param string $className
 	 */
-	private function setTable($className) {
-		$name = $this->driver->modelToTable($className);
+	private function setTableByModel($model) {
+		$tableName = $this->driver->modelToTable($model);
 		$this->field = null;
-		$this->table = $this->builder->registerTable($name);
+		$this->table = $this->builder->registerTable($tableName);
 		$this->mediator->setTable($this->table);
+		
+		$filterManager = $this->driver->getQueryFilterManager();
+		if ($filterManager->exists($tableName)) {
+			$filterManager->apply($this, $tableName);
+		}
 	}
 
 
@@ -492,5 +500,38 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	
 	function update() {
 		return $this->driver->exec($this->builder->getUpdateSQL($this->driver));
+	}
+
+
+	function filter($name = null, $filterFunction = null) {
+		$this->assertTableDefined();
+		if (is_null($name)) {
+			if ($filterFunction) throw new InvalidArgumentException("function not allowed to nameless filter");
+		}
+		else {
+			settype($name, 'string');
+			if ($filterFunction and !is_callable($filterFunction)) throw new InvalidArgumentException('filterFunction is not callable');
+		}
+		$this->driver->getQueryFilterManager()->add($this->builder, $this->table->getName(), $name, $filterFunction);
+		return $this;
+	}
+	
+	
+	/**
+	 * Магический метод для динамических фильтров
+	 * 
+	 * @param string $fn название фильтра
+	 * @param array $args
+	 */
+	function __call($filterName, $args) {
+		if ($this->table) {
+			$filterManager = $this->driver->getQueryFilterManager();
+			$tableName = $this->table->getName();
+			if ($filterManager->exists($tableName, $filterName)) {
+				$filterManager->apply($this, $tableName, $filterName, $args);
+				return $this;
+			}
+		}
+		throw new ErrorException("Call to undefined method or filter ".__CLASS__."->$filterName");
 	}
 }

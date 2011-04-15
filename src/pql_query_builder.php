@@ -21,6 +21,21 @@ final class pQL_Query_Builder {
 		$this->groupByExpr = clone $this->groupByExpr;
 		$this->orderByExpr = clone $this->orderByExpr;
 	}
+	
+	
+	function export(pQL_Query_Builder $queryBuilder) {
+		$params = $this->setExpr->export($queryBuilder);
+		if ($params) $queryBuilder->addSet($params);
+		
+		$params = $this->whereExpr->export($queryBuilder);
+		if ($params) $queryBuilder->addWhere($params);
+		
+		$params = $this->groupByExpr->export($queryBuilder);
+		if ($params) $queryBuilder->addGroup($params);
+
+		$params = $this->orderByExpr->export($queryBuilder);
+		if ($params) $queryBuilder->addOrder($params);
+	}
 
 
 	/**

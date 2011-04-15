@@ -716,4 +716,9 @@ abstract class pQL_Driver {
 	final function fieldExists($table, $field) {
 		return in_array($field, $this->getFieldsCachedNames($table));
 	}
+	
+	
+	final function getQueryFilterManager() {
+		return $this->pQL->queryFilterManager();
+	}
 }

@@ -28,6 +28,7 @@ final class pQL {
 		$this->driver = $driver;
 		$this->driver->setTranslator($this->translator);
 		$this->driver->setPql($this);
+		$this->queryFilterManager = new pQL_Query_Filter_Manager;
 	}
 
 
@@ -51,6 +52,18 @@ final class pQL {
 	 */
 	function driver() {
 		return $this->driver;
+	}
+	
+	
+	/**
+	 * @var pQL_Query_Filter_Manager
+	 */
+	private $queryFilterManager;
+	/**
+	 * Возращает менеджер фильтров запроса
+	 */
+	function queryFilterManager() {
+		return $this->queryFilterManager;
 	}
 
 
