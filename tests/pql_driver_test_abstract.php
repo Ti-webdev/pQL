@@ -1285,6 +1285,37 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 	
 	
+	function testJoinWithSimilarName() {
+		$this->exec("DROP TABLE IF EXISTS pql_a");
+		$this->exec("DROP TABLE IF EXISTS pql_b");
+		$this->exec("DROP TABLE IF EXISTS pql_a_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_a(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_b(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_a_b(id ".$this->getPKExpr().", a_id INT, b_id)");
+
+		// записи
+		// a
+		$this->exec("INSERT INTO pql_a(val) VALUES('a_first')");
+		$this->exec("INSERT INTO pql_a(val) VALUES('a_second')");
+		$this->exec("INSERT INTO pql_a(val) VALUES('a_last')");
+		// b
+		$this->exec("INSERT INTO pql_b(val) VALUES('b_first')");
+		$this->exec("INSERT INTO pql_b(val) VALUES('b_second')");
+		$this->exec("INSERT INTO pql_b(val) VALUES('b_last')");
+		// a_b
+		$this->exec("INSERT INTO pql_a_b(a_id, b_id) VALUES(2, 3)");
+		
+		// тест
+		$actual = $this->pql()->a_b->db()->a->val->key()->db()->b->val->value()->toArray();
+		$this->assertEquals(array('a_second'=>'b_last'), $actual);
+		
+		$this->exec("DROP TABLE IF EXISTS pql_a");
+		$this->exec("DROP TABLE IF EXISTS pql_b");
+		$this->exec("DROP TABLE IF EXISTS pql_a_b");
+	}
+	
+	
 	function testJoinUsingThirdTable() {
 		$this->exec("DROP TABLE IF EXISTS pql_test_a");
 		$this->exec("DROP TABLE IF EXISTS pql_test_b");

@@ -103,7 +103,7 @@ final class pQL_Query_Mediator {
 	function setup(pQL_Driver $driver) {
 		if (is_null($this->iterator)) {
 			$this->iterator = new pQL_Query_Iterator($driver, $this->setupIteratorValues($driver)); 
-			$this->setupIteratorKeysIndex();
+			$this->setupIteratorKeysIndex($driver);
 			$this->setupBindTables($driver);
 			$this->setupBindFields($driver);
 		}
@@ -121,8 +121,9 @@ final class pQL_Query_Mediator {
 	/**
 	 * устанавливаем ключи в итератор
 	 */
-	private function setupIteratorKeysIndex() {
+	private function setupIteratorKeysIndex(pQL_Driver $driver) {
 		if ($this->keyField) {
+			$driver->joinTable($this, $this->keyField->getTable());
 			$index = $this->builder->getFieldNum($this->keyField);
 			$this->iterator->setKeyIndex($index);
 		}
