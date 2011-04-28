@@ -74,8 +74,21 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	function value() {
 		$this->assertTableDefined();
 		$this->cleanResult();
-		if ($this->field) $this->mediator->setFieldValue($this->field);
-		else $this->mediator->setTableValue($this->table);
+		if ($this->field) $this->mediator->setValuesField($this->field);
+		else $this->mediator->setValuesObject($this->table);
+		return $this;
+	}
+	
+	
+	/**
+	 * Устанавливает в качестве значений выборки ассоциативный массив текущей модели
+	 * 
+	 * @return pQL_Query
+	 */
+	function hash() {
+		$this->assertTableDefined();
+		$this->cleanResult();
+		$this->mediator->setValuesHash($this->table);
 		return $this;
 	}
 

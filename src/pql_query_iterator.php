@@ -7,8 +7,17 @@
  */
 final class pQL_Query_Iterator implements Iterator {
 	private $driver;
-	function __construct(pQL_Driver $driver) {
+	
+	
+	/**
+	 * @var pQL_Query_Iterator_Values_Interface
+	 */
+	private $valuesConverter;
+	
+	
+	function __construct(pQL_Driver $driver, pQL_Query_Iterator_Values_Interface $values) {
 		$this->driver = $driver;
+		$this->valuesConverter = $values;
 	}
 	
 	
@@ -22,40 +31,18 @@ final class pQL_Query_Iterator implements Iterator {
 	 * Номер поля выборки, используемое в качестве ключей итератора
 	 * @var int
 	 */
-	private $keyIndex;
+	private $keysIndex;
 	function setKeyIndex($index) {
-		$this->keyIndex = $index;
-	}
-	
-
-	/**
-	 * Номер поля в выборке, используемое в качестве значений итератора
-	 * @var int
-	 */
-	private $valueIndex;
-	function setValueIndex($index) {
-		$this->valueIndex = $index;
-		$this->valueClass = null;
+		$this->keysIndex = $index;
 	}
 
 
-	/**
-	 * Класс используемый в качестве значений итератора
-	 * @var pQL_Query_Iterator_Class
-	 */
-	private $valueClass;
-	function setValueClass($className, $keys) {
-		$this->valueClass = new pQL_Query_Iterator_Class($className, $keys);
-		$this->valueIndex = null;
-	}
-	
-	
 	private $bindedObjectClasses = array();
-	function bindValueObject(&$var, $className, $keys) {
-		$this->bindedObjectClasses[] = array(&$var, $className, $keys);
+	function bindValueObject(&$var, pQL_Query_Iterator_Values_Object $valuesObject) {
+		$this->bindedObjectClasses[] = array(&$var, $valuesObject);
 	}
-	
-	
+
+
 	private $bindedIndexes = array();
 	function bindValueIndex(&$var, $index) {
 		$this->bindedIndexes[] = array(&$var, $index);
@@ -67,27 +54,15 @@ final class pQL_Query_Iterator implements Iterator {
 			$bind[0] = $current[$bind[1]];
 		}
 		foreach($this->bindedObjectClasses as &$bind) {
-			$bind[0] = $this->getObject($current, $bind[1], $bind[2]);
+			$bind[0] = $bind[1]->getValue($current);
 		}
 	}
 	
 	
-	private function getObject($current, $className, $inds) {
-		$properties = array();
-		foreach($inds as $i=>$name) $properties[$name] = $current[$i];
-		return $this->driver->getObject($className, $properties);
-	}
-
-
 	function current() {
 		$current = $this->iterator->current();
 		$this->setBindValues($current);
-		if (is_null($this->valueIndex)) {
-			return $this->getObject($current, $this->valueClass->getName(), $this->valueClass->getIndexes());
-		}
-		else {
-			return $current[$this->valueIndex];
-		}
+		return $this->valuesConverter->getValue($current);
 	}
 
 
@@ -97,9 +72,9 @@ final class pQL_Query_Iterator implements Iterator {
 
 
 	function key() {
-		if (is_null($this->keyIndex)) return $this->iterator->key();
+		if (is_null($this->keysIndex)) return $this->iterator->key();
 		$current = $this->iterator->current();
-		return $current[$this->keyIndex];
+		return $current[$this->keysIndex];
 	}
 
 

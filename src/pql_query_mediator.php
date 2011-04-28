@@ -58,25 +58,39 @@ final class pQL_Query_Mediator {
 	}
 
 
-	private $valueField;
+	private $valuesField;
 	/**
 	 * Устанавливает поле в качестве заначений итератора
 	 * @param pQL_Query_Builder_Field $field
 	 */
-	function setFieldValue(pQL_Query_Builder_Field $field) {
-		$this->valueTable = null;
-		$this->valueField = $field;
+	function setValuesField(pQL_Query_Builder_Field $field) {
+		$this->valuesObject = null;
+		$this->valuesField = $field;
+		$this->valuesHash = null;
 	}
 	
 	
-	private $valueTable;
+	private $valuesObject;
 	/**
 	 * Устанавливает талбицу в качестве заначений итератора
 	 * @param pQL_Query_Builder_Table $table
 	 */
-	function setTableValue(pQL_Query_Builder_Table $table) {
-		$this->valueField = null;
-		$this->valueTable = $table;
+	function setValuesObject(pQL_Query_Builder_Table $table) {
+		$this->valuesField = null;
+		$this->valuesObject = $table;
+		$this->valuesHash = null;
+	}
+	
+	
+	private $valuesHash;
+	/**
+	 * Устанавливает талбицу в качестве заначений итератора в виде ассоциативного массива
+	 * @param pQL_Query_Builder_Table $table
+	 */
+	function setValuesHash($table) {
+		$this->valuesField = null;
+		$this->valuesObject = null;
+		$this->valuesHash = $table;
 	}
 
 
@@ -88,9 +102,8 @@ final class pQL_Query_Mediator {
 	
 	function setup(pQL_Driver $driver) {
 		if (is_null($this->iterator)) {
-			$this->iterator = new pQL_Query_Iterator($driver);
-			$this->setupIteratorKeyIndex();
-			$this->setupValueIterator($driver);
+			$this->iterator = new pQL_Query_Iterator($driver, $this->setupIteratorValues($driver)); 
+			$this->setupIteratorKeysIndex();
 			$this->setupBindTables($driver);
 			$this->setupBindFields($driver);
 		}
@@ -108,7 +121,7 @@ final class pQL_Query_Mediator {
 	/**
 	 * устанавливаем ключи в итератор
 	 */
-	private function setupIteratorKeyIndex() {
+	private function setupIteratorKeysIndex() {
 		if ($this->keyField) {
 			$index = $this->builder->getFieldNum($this->keyField);
 			$this->iterator->setKeyIndex($index);
@@ -117,22 +130,30 @@ final class pQL_Query_Mediator {
 
 
 	/**
-	 * определяем значения в итератор
+	 * устанавливает конвертер значений в итераторе
 	 */
-	private function setupValueIterator(pQL_Driver $driver) {
-		$field = $this->valueField ? $this->valueField : $this->lastField;
+	private function setupIteratorValues(pQL_Driver $driver) {
+		$field = $this->valuesField ? $this->valuesField : $this->lastField;
 		if ($field) {
 			$driver->joinTable($this, $field->getTable());
 			$index = $this->builder->getFieldNum($field);
-			$this->iterator->setValueIndex($index);
-			return;
+			return new pQL_Query_Iterator_Values_Field($index);
 		}
-
-		$table = $this->valueTable ? $this->valueTable : $this->firstTable;
+		
+		if ($this->valuesHash) {
+			$table = $this->valuesHash;
+		}
+		else {
+			$table = $this->valuesObject ? $this->valuesObject : $this->firstTable;
+		}
+		
 		$driver->joinTable($this, $table);
-		$className = $driver->tableToModel($table->getName());
 		$keys = $driver->getQueryPropertiesKeys($this, $table);
-		$this->iterator->setValueClass($className, $keys);
+		if ($this->valuesHash) {
+			return new pQL_Query_Iterator_Values_Hash($keys);
+		}
+		$className = $driver->tableToModel($table->getName());
+		return new pQL_Query_Iterator_Values_Object($driver, $className, $keys);
 	}
 	
 	
@@ -160,7 +181,8 @@ final class pQL_Query_Mediator {
 			$className = $driver->tableToModel($table->getName());
 
 			$keys = $driver->getQueryPropertiesKeys($this, $table);
-			$this->iterator->bindValueObject($var, $className, $keys);
+			$values = new pQL_Query_Iterator_Values_Object($driver, $className, $keys);
+			$this->iterator->bindValueObject($var, $values);
 
 			unset($table, $var);
 		}

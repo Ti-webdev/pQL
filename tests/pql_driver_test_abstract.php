@@ -190,6 +190,22 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		}
 		$this->assertEquals(count($expected['first']), $i);
 	}
+	
+	
+	function testValuesHash() {
+		$this->exec("CREATE TABLE pql_test(first INT, number VARCHAR(255), last INT)");
+		$expected = array();
+		for($i = 0; $i<10; $i++) {
+			$object = $this->pql()->test();
+			$expected[] = array(
+				'first' => $object->first = rand(0, PHP_INT_SIZE),
+				'number' => $object->number = md5(microtime(true)),
+				'last' => $object->last = - rand(0, PHP_INT_SIZE),
+			);
+			$object->save();
+		}
+		$this->assertEquals($expected, $this->pql()->test->hash()->toArray());
+	}
 
 
 	function testFetchObject() {
