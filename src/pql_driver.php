@@ -529,20 +529,71 @@ abstract class pQL_Driver {
 	 * @return string | null
 	 */
 	private function getJoinSecondTableFieldToFirstTable($tableA, $tableB) {
+		// имя таблицы A
 		$tableNameA = $this->getTranslator()->removeDbQuotes($tableA);
-		$tableNameA_s = preg_replace(array('#(?<=\w)ies$#', '#(?<=\w)s$#'), array('y', ''), $tableNameA);
+		
+		// имя таблицы A в можественном числе
+		$tableNameA_s = self::GetTableNameWithSuffixS($tableNameA);
+		
+		// получаем все поля из B
 		foreach($this->getFieldsCachedNames($tableB) as $fieldB) {
-			$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
-			$cutPos = -strlen($fieldBSuffix);
-			$tableASuffix = substr($tableNameA, $cutPos);
-			if (0 === strcasecmp($fieldBSuffix, $tableASuffix)) return $fieldB;
-			// если таблица в множественном числе
-			$tableASuffix_s = substr($tableNameA_s, $cutPos);
-			if (0 === strcasecmp($fieldBSuffix, $tableASuffix_s)) return $fieldB;
+			if ($this->isForeignTableNameField($fieldB, $tableNameA, $tableNameA_s)) {
+				return $fieldB;
+			}
 		}
 		return null;
 	}
 	
+	
+	/**
+	 * Проверяет похоже название поля на таблицу, являясь внешним ключем
+	 * 
+	 * @param string $fieldB
+	 * @param string $tableNameA
+	 * @param string $tableNameA_s
+	 * @return bool
+	 */
+	private function isForeignTableNameField($fieldB, $tableNameA, $tableNameA_s) {
+		// суфикс поля из таблицы B
+		// без кавычек и без префикса id_
+		// без постфикса _id
+		$fieldBSuffix = preg_replace('#^id_|_id$#', '', $this->getTranslator()->removeDbQuotes($fieldB));
+		
+		$cutSize = -strlen($fieldBSuffix);
+		
+		// для таблицы с суфиксом s и без него
+		foreach(array(false, true) as $isSuffixS) {
+			// сопоставляем имя таблицы A с полем B
+			$tableASuffix = substr($isSuffixS ? $tableNameA_s : $tableNameA, $cutSize);
+			if (0 !== strcasecmp($fieldBSuffix, $tableASuffix)) continue;
+			
+			// проверяем что нет объединения с другой таблицей, с таким же суфиксом и меньшей по названию
+			foreach($this->getTablesCached() as $otherTableQuoted) {
+				$otherTable = $this->getTranslator()->removeDbQuotes($otherTableQuoted);
+
+				// длина таблицы A меньше - пропускаем
+				// задано, пропуская саму таблицу A
+				if (strlen($tableNameA) <= strlen($otherTable)) continue;
+				
+				if ($isSuffixS) $otherTable = self::GetTableNameWithSuffixS($otherTable);
+
+				$otherTableSuffix = substr($otherTable, $cutSize);
+				if (0 === strcasecmp($fieldBSuffix, $otherTableSuffix)) {
+					return false;
+				}
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
+	private static function GetTableNameWithSuffixS($tableName) {
+		return preg_replace(array('#(?<=\w)ies$#', '#(?<=\w)s$#'), array('y', ''), $tableName);
+	}
+
 	
 	final function getQueryPropertiesKeys(pQL_Query_Mediator $mediator, pQL_Query_Builder_Table $table) {
 		$result = array();

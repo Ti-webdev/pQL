@@ -1289,30 +1289,43 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->exec("DROP TABLE IF EXISTS pql_a");
 		$this->exec("DROP TABLE IF EXISTS pql_b");
 		$this->exec("DROP TABLE IF EXISTS pql_a_b");
+		$this->exec("DROP TABLE IF EXISTS pql_c");
+		$this->exec("DROP TABLE IF EXISTS pql_b_c");
 		// схема базы
 		$this->exec("CREATE TABLE pql_a(id ".$this->getPKExpr().", val VARCHAR(255))");
 		$this->exec("CREATE TABLE pql_b(id ".$this->getPKExpr().", val VARCHAR(255))");
 		$this->exec("CREATE TABLE pql_a_b(id ".$this->getPKExpr().", a_id INT, b_id)");
+		$this->exec("CREATE TABLE pql_c(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_b_c(id ".$this->getPKExpr().", b_id INT, c_id)");
 
 		// записи
 		// a
 		$this->exec("INSERT INTO pql_a(val) VALUES('a_first')");
-		$this->exec("INSERT INTO pql_a(val) VALUES('a_second')");
+		$this->exec("INSERT INTO pql_a(val) VALUES('a_second')"); // a=2
 		$this->exec("INSERT INTO pql_a(val) VALUES('a_last')");
 		// b
 		$this->exec("INSERT INTO pql_b(val) VALUES('b_first')");
 		$this->exec("INSERT INTO pql_b(val) VALUES('b_second')");
-		$this->exec("INSERT INTO pql_b(val) VALUES('b_last')");
+		$this->exec("INSERT INTO pql_b(val) VALUES('b_last')"); // b=3
 		// a_b
 		$this->exec("INSERT INTO pql_a_b(a_id, b_id) VALUES(2, 3)");
+		// c
+		$this->exec("INSERT INTO pql_c(val) VALUES('c_first')");
+		$this->exec("INSERT INTO pql_c(val) VALUES('c_second')");
+		$this->exec("INSERT INTO pql_c(val) VALUES('c_last')"); // c=1
+		// b_c
+		$this->exec("INSERT INTO pql_b_c(b_id, c_id) VALUES(3, 1)");
 		
 		// тест
-		$actual = $this->pql()->a_b->db()->a->val->key()->db()->b->val->value()->toArray();
-		$this->assertEquals(array('a_second'=>'b_last'), $actual);
+		$query = $this->pql()->a->val->key()->db()->c->val->value();
+		$actual = $query->toArray();
+		$this->assertEquals(array('a_second'=>'c_first'), $actual);
 		
 		$this->exec("DROP TABLE IF EXISTS pql_a");
 		$this->exec("DROP TABLE IF EXISTS pql_b");
 		$this->exec("DROP TABLE IF EXISTS pql_a_b");
+		$this->exec("DROP TABLE IF EXISTS pql_c");
+		$this->exec("DROP TABLE IF EXISTS pql_b_c");
 	}
 	
 	
