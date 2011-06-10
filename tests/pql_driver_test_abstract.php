@@ -1520,6 +1520,25 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 
 
+	function testQueryBuilderAddField() {
+		$this->exec("CREATE TABLE pql_test(val INT)");
+
+		$this->exec("INSERT INTO pql_test VALUES(1)");
+		$this->exec("INSERT INTO pql_test VALUES(2)");
+		$this->exec("INSERT INTO pql_test VALUES(3)");
+		$this->exec("INSERT INTO pql_test VALUES(4)");
+		$this->exec("INSERT INTO pql_test VALUES(5)");
+
+		$q = $this->pql()->test;
+		$qb = $q->qb();
+		$qbTable = $qb->registerTable($this->pql->driver()->modelToTable('test'));
+		$qb->addField('SUM(',$qb->registerField($qbTable, 'val'),')');
+
+		$actual = $this->queryValue($qb->getSQL($this->pql->driver()));
+		$this->assertEquals(15, $actual);
+	}
+
+
 	/**
 	 * @todo
 	 * @return void

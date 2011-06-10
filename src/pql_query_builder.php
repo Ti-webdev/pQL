@@ -8,6 +8,7 @@
 final class pQL_Query_Builder {
 	private $registeredTables = array();
 	function __construct() {
+		$this->fieldsExp = new pQL_Query_Expr('', ', ');
 		$this->setExpr = new pQL_Query_Expr(' SET ', ', ');
 		$this->whereExpr = new pQL_Query_Expr(' WHERE ', ' AND ');
 		$this->groupByExpr = new pQL_Query_Expr(' GROUP BY ', ', ');
@@ -16,6 +17,7 @@ final class pQL_Query_Builder {
 
 
 	function __clone() {
+		$this->fieldsExp = clone $this->fieldsExp;
 		$this->setExpr = clone $this->setExpr;
 		$this->whereExpr = clone $this->whereExpr;
 		$this->groupByExpr = clone $this->groupByExpr;
@@ -24,6 +26,9 @@ final class pQL_Query_Builder {
 	
 	
 	function export(pQL_Query_Builder $queryBuilder) {
+		$params = $this->fieldsExp->export($queryBuilder);
+		if ($params) $queryBuilder->addField($params);
+
 		$params = $this->setExpr->export($queryBuilder);
 		if ($params) $queryBuilder->addSet($params);
 		
@@ -145,10 +150,15 @@ final class pQL_Query_Builder {
 			$result .= $this->getTableAlias($rField->getTable());
 			$result .= '.';
 			$result .= $rField->getName();
-			
+
 			// В именнованных алиасах пока нет необходимости
 			#$result .= ' AS ';
 			#$result .= $this->getFieldAlias($rField);
+		}
+		$fieldsExpr = $this->fieldsExp->get($this);
+		if ($fieldsExpr) {
+			if ($result) $result .= ', ';
+			$result .= $fieldsExpr;
 		}
 		return $result;
 	}
@@ -194,10 +204,16 @@ final class pQL_Query_Builder {
 	}
 
 
+	private $fieldsExp;
 	private $setExpr;
 	private $whereExpr;
 	private $groupByExpr;
 	private $orderByExpr;
+
+
+	function addField($arg) {
+		$this->fieldsExp->pushArray(is_array($arg) ? $arg : func_get_args());
+	}
 	
 	
 	function addSet($arg) {
