@@ -567,6 +567,18 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$q = $this->pql()->test->val->group()->value()->id->asc();
 		$this->assertEquals($vals, $q->toArray(), "SQL: $q");
 	}
+
+
+	function testQueryBuilderAddHaving() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$vals = array('one', 'two', 'three');
+		for($i = 0; $i < 10; $i++) {
+			foreach($vals as $val) $this->exec("INSERT INTO pql_test(val) VALUES(".$this->quote($val).")");
+		}
+		$q = $this->pql()->test->val->group()->value()->id->asc();
+		$q->qb()->addHaving("val != 'two'");
+		$this->assertEquals(array('one', 'three'), $q->toArray(), "SQL: $q");
+	}
 	
 	
 	function testSaveForeignObject() {

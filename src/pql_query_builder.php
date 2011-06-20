@@ -13,6 +13,7 @@ final class pQL_Query_Builder {
 		$this->whereExpr = new pQL_Query_Expr(' WHERE ', ' AND ');
 		$this->groupByExpr = new pQL_Query_Expr(' GROUP BY ', ', ');
 		$this->orderByExpr = new pQL_Query_Expr(' ORDER BY ', ', ');
+		$this->havingExpr = new pQL_Query_Expr(' HAVING ', ' AND ');
 	}
 
 
@@ -22,6 +23,7 @@ final class pQL_Query_Builder {
 		$this->whereExpr = clone $this->whereExpr;
 		$this->groupByExpr = clone $this->groupByExpr;
 		$this->orderByExpr = clone $this->orderByExpr;
+		$this->havingExpr = clone $this->havingExpr;
 	}
 	
 	
@@ -40,6 +42,9 @@ final class pQL_Query_Builder {
 
 		$params = $this->orderByExpr->export($queryBuilder);
 		if ($params) $queryBuilder->addOrder($params);
+
+		$params = $this->havingExpr->export($queryBuilder);
+		if ($params) $queryBuilder->addHaving($params);
 	}
 
 
@@ -209,6 +214,7 @@ final class pQL_Query_Builder {
 	private $whereExpr;
 	private $groupByExpr;
 	private $orderByExpr;
+	private $havingExpr;
 
 
 	function addField($arg) {
@@ -233,6 +239,11 @@ final class pQL_Query_Builder {
 	
 	function addOrder($arg) {
 		$this->orderByExpr->pushArray(is_array($arg) ? $arg : func_get_args());
+	}
+
+
+	function addHaving($arg) {
+		$this->havingExpr->pushArray(is_array($arg) ? $arg : func_get_args());
 	}
 	
 	private $limit = 0;
@@ -268,7 +279,7 @@ final class pQL_Query_Builder {
 
 
 	function getSQL(pQL_Driver $driver) {
-		$suffix = $this->groupByExpr->get($this).$this->orderByExpr->get($this);
+		$suffix = $this->groupByExpr->get($this).$this->havingExpr->get($this).$this->orderByExpr->get($this);
 		$sql = 'SELECT '.$this->getSQLFields().$this->getSQLSuffix($driver, $suffix);
 		return $sql;
 	}
