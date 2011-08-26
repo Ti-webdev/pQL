@@ -824,6 +824,14 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 	}
 
 
+	function testSetNullOnUpdateQuery() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
+		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
+		$this->pql()->test->val->between(3,5)->set(null)->update();
+		$this->assertEquals(array_merge(range(0, 2), array_fill(0, 3, null), range(6, 9)), $this->pql()->test->val->toArray());
+	}
+
+
 	function testDeleteQueryAll() {
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val INT)");
 		for($i = 0; $i < 10; $i++) $this->exec("INSERT INTO pql_test(val) VALUES($i)");
@@ -1306,9 +1314,9 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		// схема базы
 		$this->exec("CREATE TABLE pql_a(id ".$this->getPKExpr().", val VARCHAR(255))");
 		$this->exec("CREATE TABLE pql_b(id ".$this->getPKExpr().", val VARCHAR(255))");
-		$this->exec("CREATE TABLE pql_a_b(id ".$this->getPKExpr().", a_id INT, b_id)");
+		$this->exec("CREATE TABLE pql_a_b(id ".$this->getPKExpr().", a_id INT, b_id INT)");
 		$this->exec("CREATE TABLE pql_c(id ".$this->getPKExpr().", val VARCHAR(255))");
-		$this->exec("CREATE TABLE pql_b_c(id ".$this->getPKExpr().", b_id INT, c_id)");
+		$this->exec("CREATE TABLE pql_b_c(id ".$this->getPKExpr().", b_id INT, c_id INT)");
 
 		// записи
 		// a
