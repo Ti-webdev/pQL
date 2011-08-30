@@ -87,6 +87,14 @@ class pQL_Driver_MySQL_Test extends pQL_Driver_Test_Abstract {
 		$obj->save();
 		$this->assertEquals($val, $this->pql()->test($val)->myLongProperty);
 	}
+
+	function testKeywoardsName() {
+		$this->exec("CREATE TABLE pql_test(id VARCHAR(32) PRIMARY KEY, `order` int)");
+		$obj = $this->pql()->test();
+		$obj->order = 555;
+		$obj->save();
+		$this->assertEquals(555, $this->pql()->test->order->one());
+	}
 	
 	
 	protected function getPKExpr() {

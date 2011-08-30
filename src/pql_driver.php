@@ -319,8 +319,9 @@ abstract class pQL_Driver {
 		foreach($idFields as $fieldNameId) {
 			foreach($allFields as $field) {
 				if (0 === strcasecmp($fieldNameId, $field->getName())) {
-					$cache->set($this->getTranslator()->addDbQuotes($fieldNameId));
-					return $fieldNameId;
+					$result = $this->getTranslator()->addDbQuotes($fieldNameId);
+					$cache->set($result);
+					return $result;
 				}
 			}
 		}
