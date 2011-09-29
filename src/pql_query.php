@@ -97,7 +97,13 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	 * @param mixed $val
 	 */
 	function in($val) {
-		$this->addArgsExpr(func_get_args(), 'IN', '=', 'OR', 'getIsNullExpr');
+		if (1 === func_num_args() and array() === $val) {
+			$this->builder->addWhere('1 <> 1');
+		}
+		else {
+			$this->addArgsExpr(func_get_args(), 'IN', '=', 'OR', 'getIsNullExpr');
+		}
+
 		return $this;
 	}
 
