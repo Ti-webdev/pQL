@@ -155,7 +155,7 @@ final class pQL {
 	}
 	
 	
-	private function setCachce(pQL_Cache_Interface $newCachce) {
-		$this->cache = $newCachce;
+	private function setCache(pQL_Cache_Interface $newCache) {
+		$this->cache = $newCache;
 	}
 }
