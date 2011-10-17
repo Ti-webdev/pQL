@@ -144,12 +144,12 @@ final class pQL {
 	function cache($newCache = null) {
 		// get
 		if (is_null($newCache)) {
-			if (is_null($this->cache)) $this->setCachce(new pQL_Cache_Local);
+			if (is_null($this->cache)) $this->setCache(new pQL_Cache_Local);
 			return $this->cache;
 		}
 
 		// set
-		$this->setCachce($newCache);
+		$this->setCache($newCache);
 
 		return $this;
 	}
