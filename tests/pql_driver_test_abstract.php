@@ -67,16 +67,6 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($val, $this->pql()->test->one()->val);
 	}
 
-	
-	function testToString() {
-		$val = md5(microtime(true));
-		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
-		$obj = $this->pql()->test()->set('val', $val)->save();
-		$this->assertEquals($val, $obj->__toString());
-		if (version_compare(PHP_VERSION, '5.2.0', '>=')) $this->assertEquals($val, "$obj");
-		$this->assertEquals($val, $this->pql()->test->one()->__toString());
-	}
-
 
 	function testUpdate() {
 		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(32))");
@@ -88,6 +78,31 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$object->save();
 
 		$this->assertEquals($object->val, $this->pql()->test($id)->val);
+	}
+
+
+	function testSetTwiceUpdate() {
+		$this->exec("CREATE TABLE pql_test(id ".$this->getPKExpr().", val VARCHAR(32))");
+		$this->exec("INSERT INTO pql_test(val) VALUES('".md5(microtime(true))."')");
+		$id = $this->lastInsertId();
+
+		$object = $this->pql()->test($id);
+		$object->val = null; // twise set
+		$this->assertNull($object->val);
+		$object->val = md5(microtime(true));
+		$object->save();
+
+		$this->assertEquals($object->val, $this->pql()->test($id)->val);
+	}
+
+	
+	function testToString() {
+		$val = md5(microtime(true));
+		$this->exec("CREATE TABLE pql_test(val VARCHAR(32))");
+		$obj = $this->pql()->test()->set('val', $val)->save();
+		$this->assertEquals($val, $obj->__toString());
+		if (version_compare(PHP_VERSION, '5.2.0', '>=')) $this->assertEquals($val, "$obj");
+		$this->assertEquals($val, $this->pql()->test->one()->__toString());
 	}
 
 	

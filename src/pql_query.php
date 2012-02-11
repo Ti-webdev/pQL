@@ -165,6 +165,13 @@ final class pQL_Query implements IteratorAggregate, Countable, ArrayAccess {
 	}
 
 
+	function page($limitPerPage, $page = 1) {
+		$this->limit($limitPerPage);
+		$this->offset($limitPerPage * max(0, $page - 1));
+		return $this;
+	}
+
+
 	function limit($limit = null) {
 		$this->cleanResult();
 		$this->builder->setLimit($limit);
