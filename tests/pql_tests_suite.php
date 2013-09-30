@@ -15,7 +15,6 @@ class pQL_Tests_Suite extends PHPUnit_Framework_TestSuite {
 	public function __construct() {
 		$this->setName(__CLASS__);
 		$this->addTestSuite('pQL_Coding_Zend_Test');
-		$this->addTestSuite('pQL_Driver_MySQL_Test');
 		$this->addTestSuite('pQL_Driver_PDO_MySQL_Test');
 		$this->addTestSuite('pQL_Driver_PDO_SQLite_Test');
 	}

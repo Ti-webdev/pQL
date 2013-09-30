@@ -1,8 +1,9 @@
 <?php
 chdir(dirname(__FILE__));
 
-require_once 'PHPUnit/Framework.php';
-require_once 'PHPUnit/TextUI/TestRunner.php';
+if (!class_exists('PHPUnit_Framework_TestSuite', false)) {
+    require_once 'PHPUnit/Autoload.php';
+}
 
 error_reporting(E_ALL|E_STRICT);
 #require_once __DIR__.'/../pql.php';

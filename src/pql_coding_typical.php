@@ -9,11 +9,11 @@
  */
 final class pQL_Coding_Typical implements pQL_Coding_Interface {
 	function toDB($string) {
-		return strtolower(preg_replace('#(.)([A-Z])#ue', '"$1_$2"', $string));
+		return strtolower(preg_replace('#(.)([A-Z])#u', '$1_$2', $string));
 	}
 
 
 	function fromDb($string) {
-		return preg_replace('#_(\w)#ue', 'strtoupper("$1")', $string);
+		return preg_replace_callback('#_(\w)#u', function($matches) { return strtoupper($matches[1]); }, $string);
 	}
 }

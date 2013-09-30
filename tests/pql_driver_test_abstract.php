@@ -967,7 +967,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		
 		$this->pql->coding(new pQL_Coding_Typical);
 		$b = $this->pql()->testB->one();
-		$this->assertType('pQL_Object', $b->test);
+		$this->assertInstanceOf('pQL_Object', $b->test);
 		$this->assertEquals('first', $b->test->val);
 	}
 	
@@ -988,7 +988,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$a = $this->pql()->test(2);
 		$b = $this->pql()->testB->test->in($a)->one();
 
-		$this->assertType('pQL_Object', $b->test);
+		$this->assertInstanceOf('pQL_Object', $b->test);
 		$this->assertEquals('second', $b->test->val);
 	}
 	
@@ -1089,7 +1089,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->pql->coding(new pQL_Coding_Typical);
 
 		$b = $this->pql()->testB($bId);
-		$this->assertType('pQL_Object', $b->a);
+		$this->assertInstanceOf('pQL_Object', $b->a);
 		$this->assertEquals('middle', $b->a->val);
 
 		// tearDown
@@ -1155,7 +1155,7 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 		$this->pql->coding(new pQL_Coding_Typical);
 
 		$b = $this->pql()->testB($bId);
-		$this->assertType('pQL_Object', $b->a);
+		$this->assertInstanceOf('pQL_Object', $b->a);
 		$this->assertEquals('middle', $b->a->val);
 
 		// tearDown
@@ -1260,32 +1260,32 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		foreach($this->getClassNameTestResultObjects() as $object) {
 			// проверяем что является pQL_Object
-			$this->assertType('pQL_Object', $object);
+			$this->assertInstanceOf('pQL_Object', $object);
 			// и не является нашим классом
-			$this->assertNotType('pQL_Driver_Test_Object', $object);
+			$this->assertNotInstanceOf('pQL_Driver_Test_Object', $object);
 		}
 
 		// меняем на наш класс
 		$this->pql->className('pQL_Driver_Test_Object');
 		foreach($this->getClassNameTestResultObjects() as $a) {
-			$this->assertType('pQL_Object', $a);
-			$this->assertType('pQL_Driver_Test_Object', $a);
+			$this->assertInstanceOf('pQL_Object', $a);
+			$this->assertInstanceOf('pQL_Driver_Test_Object', $a);
 		}
 
 		// восстанавливаем
 		$this->pql->className($orgClassName);
 		foreach($this->getClassNameTestResultObjects() as $object) {
 			// проверяем что является pQL_Object
-			$this->assertType('pQL_Object', $object);
+			$this->assertInstanceOf('pQL_Object', $object);
 			// и не является нашим классом
-			$this->assertNotType('pQL_Driver_Test_Object', $object);
+			$this->assertNotInstanceOf('pQL_Driver_Test_Object', $object);
 		}
 
 		// меняем на наш загрузчик классов
 		$this->pql->objectDefinder(new pQL_Driver_Test_Object_Definer);
 		foreach($this->getClassNameTestResultObjects() as $model=>$object) {
 			$className = 'pQL_Driver_Test_'.ucfirst($model);
-			$this->assertType($className, $object);
+			$this->assertInstanceOf($className, $object);
 		}
 		
 		$this->exec("DROP TABLE pql_test_b");

@@ -13,6 +13,6 @@ final class pQL_Coding_Zend implements pQL_Coding_Interface {
 
 
 	function fromDb($string) {
-		return preg_replace('#(^|_)\w#ue', 'strtoupper("$0")', $string);
+		return preg_replace_callback('#(^|_)\w#u', function($matches) { return strtoupper($matches[0]); }, $string);
 	}
 }
