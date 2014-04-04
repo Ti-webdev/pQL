@@ -47,13 +47,17 @@ abstract class pQL_Driver_PDO extends pQL_Driver {
 	
 	
 	final protected function insert($table, $fields, $values) {
+		$pk = $this->getTablePrimaryKey($table);
 		if ($fields) {
 			$sth = $this->getDbh()->prepare("INSERT INTO $table(".implode(',', $fields).") VALUES(?".str_repeat(', ?', count($fields)-1).")");
 			foreach($values as $i=>$val) $sth->bindValue($i+1, $val);
 			$sth->execute();
+			if (1 === count($pk) && in_array(reset($pk), $fields)) {
+				// do not return lastInsertId() !
+				return null;
+			}
 		}
 		else {
-			$pk = $this->getTablePrimaryKey($table);
 			$fields = implode(',', $pk);
 			$values = implode(',', array_fill(0, count($fields), 'NULL'));
 			$this->getDbh()->exec("INSERT INTO $table($fields) VALUES($values)");

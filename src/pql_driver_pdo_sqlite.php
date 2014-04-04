@@ -24,8 +24,16 @@ final class pQL_Driver_PDO_SQLite extends pQL_Driver_PDO {
 		$q = $this->getDbh()->query("PRAGMA table_info($table)");
 		$q->setFetchMode(PDO::FETCH_COLUMN, 1);
 		$result = array();
+		$hasPrimary = false;
 		foreach($this->getDbh()->query("PRAGMA table_info($table)", PDO::FETCH_ASSOC) as $column) {
-			$result[] = new pQL_Db_Field($column['name'], (bool) $column['pk']);
+			$isPrimary = (bool) $column['pk'];
+			$result[] = new pQL_Db_Field($column['name'], $isPrimary);
+			$hasPrimary = $hasPrimary || $isPrimary;
+		}
+		if ($result && !$hasPrimary) {
+			// если не pk, - делаем первую клонку pk
+			$firstField = array_shift($result);
+			array_unshift($result, new pQL_Db_Field($firstField->getName(), true));
 		}
 		return $result;
 	}

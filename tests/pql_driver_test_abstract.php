@@ -623,12 +623,13 @@ abstract class pQL_Driver_Test_Abstract extends PHPUnit_Framework_TestCase {
 
 		$this->exec("DROP TABLE pql_test_b");
 	}
-	
-	
-	final function testErrorOnSaveWithoutPK() {
+
+
+	final function testSaveWithoutPK() {
 		$this->exec("CREATE TABLE pql_test(val VARCHAR(225))");
-		$this->setExpectedException('pQL_Exception_PrimaryKeyNotExists');
-		$this->pql()->test()->save();
+		$this->pql()->test()->set('val', 'waka')->save();
+		$this->assertEquals('waka', $this->pql()->test('waka')->val);
+		$this->exec("DROP TABLE pql_test");
 	}
 
 

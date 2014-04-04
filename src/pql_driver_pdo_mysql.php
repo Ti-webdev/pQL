@@ -29,8 +29,16 @@ final class pQL_Driver_PDO_MySQL extends pQL_Driver_PDO {
 
 	protected function getTableFields($table) {
 		$result = array();
+		$hasPrimary = false;
 		foreach($this->getDbh()->query("SHOW COLUMNS FROM $table", PDO::FETCH_ASSOC) as $column) {
-			$result[] = new pQL_Db_Field($column['Field'], 'PRI' == $column['Key']);
+			$isPrimary = 'PRI' == $column['Key'];
+			$result[] = new pQL_Db_Field($column['Field'], $isPrimary);
+			$hasPrimary = $hasPrimary || $isPrimary;
+		}
+		if ($result && !$hasPrimary) {
+			// если не pk, - делаем первую клонку pk
+			$firstField = array_shift($result);
+			array_unshift($result, new pQL_Db_Field($firstField->getName(), true));
 		}
 		return $result;
 	}

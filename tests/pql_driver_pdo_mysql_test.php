@@ -17,9 +17,9 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$object = $this->pql()->test($id);
 		$this->assertEquals($id, $object->id);
 		$this->assertTrue($object instanceof pQL_Object);
-		
+
 		$this->pql->clearCache();
-		
+
 		// несколько записей
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
@@ -27,7 +27,7 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 		$this->assertEquals($id, $this->pql()->test($id)->id);
 		$this->db->exec("INSERT INTO pql_test VALUES(NULL)");
 		$this->assertEquals($id, $this->pql()->test($id)->id);
-		
+
 		$this->pql->clearCache();
 
 		// custom pk
@@ -72,5 +72,48 @@ class pQL_Driver_PDO_MySQL_Test extends pQL_Driver_PDO_Test_Abstract {
 	
 	protected function getPKExpr() {
 		return 'INT AUTO_INCREMENT PRIMARY KEY';
+	}
+
+	function testPkForView() {
+		$this->db->exec("DROP VIEW IF EXISTS pql_test_view");
+		$val = md5(microtime(true));
+		$this->db->exec("CREATE TABLE pql_test(val VARCHAR(32) PRIMARY KEY, last_col INT)");
+		$this->db->exec("INSERT INTO pql_test VALUES('$val', null)");
+		$this->db->exec("CREATE VIEW pql_test_view AS SELECT * FROM pql_test");
+
+		$this->pql->clearCache();
+
+		$this->assertEquals($val, $this->pql()->test_view->one()->val, 'test select');
+		$this->assertEquals($val, $this->pql()->test_view($val)->val, 'test pk');
+
+		$this->db->exec("DROP TABLE pql_test");
+		$this->db->exec("DROP VIEW pql_test_view");
+	}
+
+	function testPkForViewForeign() {
+		$this->db->exec("DROP TABLE IF EXISTS pql_test_tbl");
+		$this->db->exec("DROP VIEW IF EXISTS pql_test_view");
+		$this->exec("DROP TABLE IF EXISTS pql_test_b");
+		// схема базы
+		$this->exec("CREATE TABLE pql_test_tbl(id ".$this->getPKExpr().", val VARCHAR(255))");
+		$this->exec("CREATE TABLE pql_test_b(id ".$this->getPKExpr().", val VARCHAR(255), test_view_id INT)");
+		$this->exec("CREATE VIEW pql_test_view AS SELECT * FROM pql_test_tbl");
+		// записи
+		$this->exec("INSERT INTO pql_test_tbl(id, val) VALUES(1, 'first')");
+		$this->exec("INSERT INTO pql_test_tbl(id, val) VALUES(2, 'second')");
+		$this->exec("INSERT INTO pql_test_tbl(id, val) VALUES(3, 'last')");
+		$this->exec("INSERT INTO pql_test_b(test_view_id, val) VALUES(2, 'b_second')");
+
+		$this->pql->coding(new pQL_Coding_Typical);
+
+		$testView = $this->pql()->testView(2);
+
+		$b = $this->pql()->testB->testView->in($testView)->one();
+
+		$this->assertInstanceOf('pQL_Object', $b->testView);
+		$this->assertEquals('second', $b->testView->val);
+
+		$this->db->exec("DROP TABLE IF EXISTS pql_test_tbl");
+		$this->db->exec("DROP VIEW IF EXISTS pql_test_view");
 	}
 }
